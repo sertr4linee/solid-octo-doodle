@@ -1,20 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This is a [Next.js](https://nextjs.org) project with authentication using [Better Auth](https://better-auth.com) and PostgreSQL.
 
-## Getting Started
+## 🚀 Getting Started
 
-First, run the development server:
+### Développement Local (Port 3000)
 
+1. **Installer les dépendances** :
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+2. **Configurer l'environnement** :
+   - Assurez-vous que PostgreSQL est lancé localement sur le port 5432
+   - Vérifiez que `.env` contient : `DATABASE_URL="postgresql://user:password@localhost:5432/mydb"`
+   - Vérifiez que `.env` contient : `BETTER_AUTH_URL="http://localhost:3000"`
+
+3. **Initialiser la base de données** :
+```bash
+bun run prisma:generate
+bun run prisma:migrate
+```
+
+4. **Lancer le serveur de développement** :
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+5. **Ouvrir l'application** : [http://localhost:3000](http://localhost:3000)
+
+---
+
+### Docker (Port 8081)
+
+1. **Modifier le `.env`** :
+   - Changez `DATABASE_URL="postgresql://user:password@db:5432/mydb"`
+   - Changez `BETTER_AUTH_URL="http://localhost:8081"`
+   - Changez `NEXT_PUBLIC_BETTER_AUTH_URL="http://localhost:8081"`
+
+2. **Lancer Docker Compose** (depuis la racine du projet) :
+```bash
+docker-compose up --build
+```
+
+3. **Ouvrir l'application** : [http://localhost:8081](http://localhost:8081)
+
+---
+
+## 📝 Configuration
+
+Le fichier `.env` contient toutes les variables d'environnement nécessaires :
+- **Database** : Connexion PostgreSQL
+- **Better Auth** : Secret et URLs
+- **OAuth** : Google & GitHub (optionnel)
+- **Email/SMTP** : Pour les magic links
+
+## 🔐 Authentification
+
+L'application supporte :
+- ✉️ Email/Password
+- 🔗 Magic Link (email)
+- 🌐 Google OAuth
+- 🐙 GitHub OAuth
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

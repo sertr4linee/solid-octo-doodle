@@ -1,4 +1,4 @@
-import { LoginForm } from "@/components/login-form";
+import { RegisterForm } from "@/components/register-form";
 import { GradientMesh } from "@/components/gradient-mesh";
 
 export default function Page() {
@@ -8,20 +8,20 @@ export default function Page() {
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" aria-label="home" className="flex gap-2 items-center">
             <div className="h-10 w-10 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-2xl font-bold text-primary-foreground">E</span>
+              <span className="text-2xl font-bold text-primary-foreground">A</span>
             </div>
-            <span className="text-xl font-semibold">epi trello</span>
+            <span className="text-xl font-semibold">YourApp</span>
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-xs">
-            <LoginForm />
+            <RegisterForm />
           </div>
         </div>
       </div>
       <div className="bg-muted relative hidden lg:block">
         <GradientMesh
-          colors={["#bcecf6", "#00aaff", "#ffd447"]}
+          colors={["#ffd447", "#00aaff", "#bcecf6"]}
           distortion={8}
           swirl={0.2}
           speed={1}
