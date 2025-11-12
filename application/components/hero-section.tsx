@@ -38,11 +38,13 @@ export function HeroSection() {
         enableMouseInteraction={true}
         mouseRadius={0.4}
       />
+      {/* Gradient de transition vers le noir */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-black z-[5] pointer-events-none" />
       <div className="relative z-10 flex h-full w-full items-center justify-center px-6 text-center">
         <div className="container mx-auto flex flex-col items-center gap-8 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-1.5 text-xs font-medium text-white">
             <Sparkles className="w-3 h-3" />
-            Powered by Better Auth
+            Powered by moi meme
           </div>
 
           <h1 className="text-5xl md:text-7xl max-w-3xl tracking-tighter font-regular px-4">
