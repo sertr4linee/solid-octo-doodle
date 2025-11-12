@@ -1,18 +1,9 @@
 "use client";
 
-import Dither from "@/components/dither";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { DITHER_PRESETS } from "@/lib/dither-presets";
-
-export function HeroSection() {
-  return (
-    "use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { MoveRight } from "lucide-react";
+import { LiquidButton } from "@/components/ui/button";
+import { MoveRight, Sparkles } from "lucide-react";
 import { DitherBackground } from "@/components/dither-background";
 import { DITHER_COLORS } from "@/lib/dither-presets";
 import Link from "next/link";
@@ -48,19 +39,21 @@ export function HeroSection() {
         mouseRadius={0.4}
       />
       <div className="relative z-10 flex h-full w-full items-center justify-center px-6 text-center">
-        <div className="container mx-auto flex flex-col items-center gap-12 text-center">
-          <Button variant="secondary" size="sm" className="gap-4">
-            Powered by Better Auth <MoveRight className="w-4 h-4" />
-          </Button>
+        <div className="container mx-auto flex flex-col items-center gap-8 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-4 py-1.5 text-xs font-medium text-white">
+            <Sparkles className="w-3 h-3" />
+            Powered by Better Auth
+          </div>
 
-          <h1 className="text-5xl md:text-7xl max-w-2xl tracking-tighter font-regular">
+          <h1 className="text-5xl md:text-7xl max-w-3xl tracking-tighter font-regular px-4">
             <span className="text-white">Your work, but</span>
-            <span className="relative flex w-full justify-center overflow-hidden md:pb-4 md:pt-1">
+            <span className="relative flex w-full justify-center overflow-visible md:pb-4 md:pt-2 py-2">
               &nbsp;
               {projectTitles.map((title, index) => (
                 <motion.span
                   key={index}
-                  className="absolute font-semibold text-white"
+                  className="absolute font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent px-2"
+                  style={{ fontFamily: "'Momo Signature', cursive", lineHeight: "1.2" }}
                   initial={{ opacity: 0, y: "-100" }}
                   transition={{ type: "spring", stiffness: 50 }}
                   animate={
@@ -73,40 +66,31 @@ export function HeroSection() {
                 </motion.span>
               ))}
             </span>
-            <br />
-            <span
-              className="font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
-              style={{ fontFamily: "'Momo Signature', cursive" }}
-            >
-              with Epitrello
-            </span>
           </h1>
 
-          <p className="text-lg md:text-xl leading-relaxed tracking-tight text-white/90 max-w-2xl text-center">
+          <p className="text-base md:text-lg leading-relaxed tracking-tight text-white/80 max-w-xl">
             The visual tool that empowers your team to manage any type of
             project, workflow, or task tracking with ease.
           </p>
 
-          <div className="flex flex-row gap-3 flex-wrap justify-center">
+          <div className="flex flex-row gap-3 flex-wrap justify-center mt-2">
             <Link href="/auth/register">
-              <Button size="lg" className="gap-4">
+              <LiquidButton size="lg" className="gap-2 text-white">
                 Get started - it's free <MoveRight className="w-4 h-4" />
-              </Button>
+              </LiquidButton>
             </Link>
             <Link href="/auth">
-              <Button
+              <LiquidButton
                 size="lg"
                 variant="outline"
-                className="gap-4 bg-white/10 text-white border-white/20 hover:bg-white/20"
+                className="gap-2 bg-white/5 text-white border-white/20 hover:bg-white/10"
               >
                 Sign in
-              </Button>
+              </LiquidButton>
             </Link>
           </div>
         </div>
       </div>
     </section>
-  );
-}
   );
 }

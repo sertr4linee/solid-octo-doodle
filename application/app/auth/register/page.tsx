@@ -22,7 +22,7 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
+      <div className="bg-muted relative hidden lg:block overflow-hidden">
         <DitherBackground
           waveColor={DITHER_COLORS.trelloPurple}
           colorNum={6}
@@ -35,9 +35,9 @@ export default function RegisterPage() {
           className="opacity-80"
         />
         <div className="absolute inset-0 flex items-center justify-center p-8 z-10">
-          <div className="max-w-md text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">Join Epitrello</h2>
-            <p className="text-lg opacity-90">
+          <div className="max-w-md text-center text-white px-4">
+            <h2 className="text-3xl font-bold mb-4 leading-tight">Join Epitrello</h2>
+            <p className="text-lg opacity-90 leading-relaxed">
               Create your account and start organizing your projects with ease.
             </p>
           </div>

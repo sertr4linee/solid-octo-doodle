@@ -22,7 +22,7 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
+      <div className="bg-muted relative hidden lg:block overflow-hidden">
         <DitherBackground
           waveColor={DITHER_COLORS.trelloBlue}
           colorNum={6}
@@ -35,9 +35,9 @@ export default function AuthPage() {
           className="opacity-80"
         />
         <div className="absolute inset-0 flex items-center justify-center p-8 z-10">
-          <div className="max-w-md text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">Welcome back!</h2>
-            <p className="text-lg opacity-90">
+          <div className="max-w-md text-center text-white px-4">
+            <h2 className="text-3xl font-bold mb-4 leading-tight">Welcome back!</h2>
+            <p className="text-lg opacity-90 leading-relaxed">
               Sign in to access your boards and continue collaborating with your team.
             </p>
           </div>
