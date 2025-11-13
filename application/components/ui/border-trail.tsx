@@ -1,6 +1,7 @@
 'use client';
 import { cn } from '@/lib/utils';
-import { motion, Transition } from 'framer-motion';
+import { motion } from 'framer-motion';
+import type { Transition } from 'framer-motion';
 
 type BorderTrailProps = {
   className?: string;
@@ -19,10 +20,10 @@ export function BorderTrail({
   onAnimationComplete,
   style,
 }: BorderTrailProps) {
-  const BASE_TRANSITION = {
+  const BASE_TRANSITION: Transition = {
     repeat: Infinity,
     duration: 5,
-    ease: 'linear',
+    ease: "linear" as const,
   };
 
   return (
@@ -38,9 +39,10 @@ export function BorderTrail({
           offsetDistance: ['0%', '100%'],
         }}
         transition={{
-          ...(transition ?? BASE_TRANSITION),
+          ...BASE_TRANSITION,
+          ...transition,
           delay: delay,
-        }}
+        } as Transition}
         onAnimationComplete={onAnimationComplete}
       />
     </div>
