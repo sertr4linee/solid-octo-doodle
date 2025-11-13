@@ -54,7 +54,10 @@ const epitrelloFeatures: BentoItem[] = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-20 bg-black">
+    <section id="features" className="py-24 bg-black relative">
+      {/* Gradient supérieur pour transition douce */}
+      <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black to-transparent pointer-events-none" />
+      
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -66,16 +69,6 @@ export function FeaturesSection() {
         </div>
 
         <BentoGrid items={epitrelloFeatures} />
-
-        {/* CTA */}
-        <div className="text-center mt-16">
-          <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-            <Link href="/auth/register">Start for Free</Link>
-          </Button>
-          <p className="text-sm text-muted-foreground mt-4">
-            No credit card required • Free forever plan available
-          </p>
-        </div>
       </div>
     </section>
   );

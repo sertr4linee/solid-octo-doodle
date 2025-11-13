@@ -60,7 +60,7 @@ export function Menus() {
             asChild
             className={cn(navigationMenuTriggerStyle(), "bg-transparent text-xs")}
           >
-            <a href="#">About</a>
+            <a href="#features">Features</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -68,7 +68,7 @@ export function Menus() {
             asChild
             className={cn(navigationMenuTriggerStyle(), "bg-transparent text-xs")}
           >
-            <a href="#">Templates</a>
+            <a href="#testimonials">Testimonials</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
@@ -76,41 +76,7 @@ export function Menus() {
             asChild
             className={cn(navigationMenuTriggerStyle(), "bg-transparent text-xs")}
           >
-            <a href="#">Blocks</a>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuTrigger className="bg-transparent text-xs">
-            Resources
-          </NavigationMenuTrigger>
-          <NavigationMenuContent className="p-2">
-            <ul className="grid gap-3 md:grid-cols-3 max-w-xl lg:w-3xl">
-              {components.map((component) => (
-                <ListItem
-                  key={component.title}
-                  title={component.title}
-                  href={component.href}
-                >
-                  {component.description}
-                </ListItem>
-              ))}
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            asChild
-            className={cn(navigationMenuTriggerStyle(), "bg-transparent text-xs")}
-          >
-            <a href="#">Icons</a>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            asChild
-            className={cn(navigationMenuTriggerStyle(), "bg-transparent text-xs")}
-          >
-            <a href="#">Components</a>
+            <a href="#pricing">Pricing</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>

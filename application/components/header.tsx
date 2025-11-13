@@ -4,13 +4,11 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button"; 
 import { Menus } from "@/components/menus";
-import { ModeToggle } from "@/components/theme-switch";
 
 const menuItems = [
   { name: "Features", href: "#features" },
+  { name: "Testimonials", href: "#testimonials" },
   { name: "Pricing", href: "#pricing" },
-  { name: "About", href: "#about" },
-  { name: "Contact", href: "#contact" },
 ];
 
 const Header = () => {
@@ -87,7 +85,6 @@ const Header = () => {
                   </ul>
                 </div>
                 <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-2 sm:space-y-0">
-                  <ModeToggle />
                   <Button
                     variant={"default"}
                     asChild
