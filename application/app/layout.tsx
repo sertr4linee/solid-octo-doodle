@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/layout/header";
 import { ThemeProvider } from "@/components/theme-provider";
 
 const montserrat = Montserrat({
@@ -27,11 +26,10 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          enableSystem={false}
           disableTransitionOnChange
         >
-          <Header />
           {children}
         </ThemeProvider>
       </body>

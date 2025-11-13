@@ -57,4 +57,69 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+// LiquidButton component with glass effect
+const liquidbuttonVariants = cva(
+  "relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-lg text-sm font-medium transition-all duration-300 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-blue-600 text-white hover:bg-blue-700 hover:scale-105",
+        outline: "border-2 hover:scale-105",
+      },
+      size: {
+        default: "h-10 px-6 py-2",
+        sm: "h-8 px-4 py-1.5",
+        lg: "h-12 px-8 py-3",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+
+function LiquidButton({
+  className,
+  variant,
+  size,
+  children,
+  ...props
+}: React.ComponentProps<"button"> & VariantProps<typeof liquidbuttonVariants>) {
+  return (
+    <button
+      className={cn(liquidbuttonVariants({ variant, size }), className)}
+      {...props}
+    >
+      <span className="relative z-10">{children}</span>
+      <span className="absolute inset-0 bg-gradient-to-r from-blue-400/20 via-cyan-400/20 to-purple-400/20 blur-xl" />
+      <GlassFilter />
+    </button>
+  );
+}
+
+function GlassFilter() {
+  return (
+    <svg className="absolute inset-0 size-0">
+      <defs>
+        <filter id="glass-filter">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.01 0.01"
+            numOctaves="2"
+            result="turbulence"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="turbulence"
+            scale="5"
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+      </defs>
+    </svg>
+  );
+}
+
+export { Button, buttonVariants, LiquidButton, liquidbuttonVariants }

@@ -12,25 +12,22 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
   Activity,
-  DollarSign,
   Home,
-  Infinity,
-  LinkIcon,
+  LayoutDashboard,
+  ListTodo,
   Package2,
-  Percent,
-  PieChart,
   Settings,
-  ShoppingBag,
-  Sparkles,
-  Store,
-  TrendingUp,
   Users,
+  Sparkles,
+  Bell,
+  Calendar,
+  Archive,
 } from "lucide-react";
-import { Logo } from "@/components/logo";
-import type { Route } from "./nav-main";
-import DashboardNavigation from "@/components/nav-main";
-import { NotificationsPopover } from "@/components/nav-notifications";
-import { TeamSwitcher } from "@/components/team-switcher";
+import { Logo } from "@/components/layout/logo";
+import type { Route } from "./layout/nav-main";
+import DashboardNavigation from "@/components/layout/nav-main";
+import { NotificationsPopover } from "@/components/layout/nav-notifications";
+import { TeamSwitcher } from "@/components/layout/team-switcher";
 
 const sampleNotifications = [
   {
@@ -61,119 +58,96 @@ const dashboardRoutes: Route[] = [
     id: "home",
     title: "Home",
     icon: <Home className="size-4" />,
-    link: "#",
+    link: "/dashboard",
   },
   {
-    id: "products",
-    title: "Products",
-    icon: <Package2 className="size-4" />,
-    link: "#",
+    id: "boards",
+    title: "Boards",
+    icon: <LayoutDashboard className="size-4" />,
+    link: "/dashboard/boards",
     subs: [
       {
-        title: "Catalogue",
-        link: "#",
-        icon: <Package2 className="size-4" />,
+        title: "My Boards",
+        link: "/dashboard/boards",
+        icon: <LayoutDashboard className="size-4" />,
       },
       {
-        title: "Checkout Links",
-        link: "#",
-        icon: <LinkIcon className="size-4" />,
+        title: "Shared with me",
+        link: "/dashboard/boards/shared",
+        icon: <Users className="size-4" />,
       },
       {
-        title: "Discounts",
-        link: "#",
-        icon: <Percent className="size-4" />,
+        title: "Archived",
+        link: "/dashboard/boards/archived",
+        icon: <Archive className="size-4" />,
       },
     ],
   },
   {
-    id: "usage-billing",
-    title: "Usage Billing",
-    icon: <PieChart className="size-4" />,
-    link: "#",
+    id: "tasks",
+    title: "Tasks",
+    icon: <ListTodo className="size-4" />,
+    link: "/dashboard/tasks",
     subs: [
       {
-        title: "Meters",
-        link: "#",
-        icon: <PieChart className="size-4" />,
+        title: "All Tasks",
+        link: "/dashboard/tasks",
+        icon: <ListTodo className="size-4" />,
       },
       {
-        title: "Events",
-        link: "#",
+        title: "Assigned to me",
+        link: "/dashboard/tasks/assigned",
+        icon: <Users className="size-4" />,
+      },
+      {
+        title: "Activity",
+        link: "/dashboard/tasks/activity",
         icon: <Activity className="size-4" />,
       },
     ],
   },
   {
-    id: "benefits",
-    title: "Benefits",
-    icon: <Sparkles className="size-4" />,
-    link: "#",
+    id: "calendar",
+    title: "Calendar",
+    icon: <Calendar className="size-4" />,
+    link: "/dashboard/calendar",
   },
   {
-    id: "customers",
-    title: "Customers",
+    id: "team",
+    title: "Team",
     icon: <Users className="size-4" />,
-    link: "#",
+    link: "/dashboard/team",
   },
   {
-    id: "sales",
-    title: "Sales",
-    icon: <ShoppingBag className="size-4" />,
-    link: "#",
-    subs: [
-      {
-        title: "Orders",
-        link: "#",
-        icon: <ShoppingBag className="size-4" />,
-      },
-      {
-        title: "Subscriptions",
-        link: "#",
-        icon: <Infinity className="size-4" />,
-      },
-    ],
+    id: "integrations",
+    title: "Integrations",
+    icon: <Package2 className="size-4" />,
+    link: "/dashboard/integrations",
   },
   {
-    id: "storefront",
-    title: "Storefront",
-    icon: <Store className="size-4" />,
-    link: "#",
-  },
-  {
-    id: "analytics",
-    title: "Analytics",
-    icon: <TrendingUp className="size-4" />,
-    link: "#",
-  },
-  {
-    id: "finance",
-    title: "Finance",
-    icon: <DollarSign className="size-4" />,
-    link: "#",
-    subs: [
-      { title: "Incoming", link: "#" },
-      { title: "Outgoing", link: "#" },
-      { title: "Payout Account", link: "#" },
-    ],
+    id: "notifications",
+    title: "Notifications",
+    icon: <Bell className="size-4" />,
+    link: "/dashboard/notifications",
   },
   {
     id: "settings",
     title: "Settings",
     icon: <Settings className="size-4" />,
-    link: "#",
+    link: "/dashboard/settings",
     subs: [
-      { title: "General", link: "#" },
-      { title: "Webhooks", link: "#" },
-      { title: "Custom Fields", link: "#" },
+      { title: "General", link: "/dashboard/settings/general" },
+      { title: "Profile", link: "/dashboard/settings/profile" },
+      { title: "Notifications", link: "/dashboard/settings/notifications" },
+      { title: "Security", link: "/dashboard/settings/security" },
     ],
   },
 ];
 
 const teams = [
-  { id: "1", name: "Alpha Inc.", logo: Logo, plan: "Free" },
-  { id: "2", name: "Beta Corp.", logo: Logo, plan: "Free" },
-  { id: "3", name: "Gamma Tech", logo: Logo, plan: "Free" },
+  { id: "1", name: "Personal Workspace", logo: Logo, plan: "Free" },
+  { id: "2", name: "Team Alpha", logo: Logo, plan: "Pro" },
+  { id: "3", name: "Project Beta", logo: Logo, plan: "Free" },
 ];
 
 export function DashboardSidebar() {
@@ -190,11 +164,13 @@ export function DashboardSidebar() {
             : "flex-row items-center justify-between"
         )}
       >
-        <a href="#" className="flex items-center gap-2">
-          <Logo className="h-8 w-8" />
+        <a href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-lg">E</span>
+          </div>
           {!isCollapsed && (
-            <span className="font-semibold text-black dark:text-white">
-              Acme
+            <span className="font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              Epitrello
             </span>
           )}
         </a>
