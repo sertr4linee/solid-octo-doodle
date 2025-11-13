@@ -1,6 +1,6 @@
 "use client";
 
-import Dither from "@/components/dither";
+import Dither from "@/components/backgrounds/dither";
 
 interface DitherBackgroundProps {
   waveColor?: [number, number, number];
