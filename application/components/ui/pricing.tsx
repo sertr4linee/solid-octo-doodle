@@ -10,7 +10,10 @@ import { BorderTrail } from './border-trail';
 export function Pricing() {
 	return (
 		<section id="pricing" className="relative min-h-screen overflow-hidden py-24 bg-black">
-			<div className="mx-auto w-full max-w-6xl space-y-5 px-4">
+			{/* Gradient supérieur pour transition douce */}
+			<div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black to-transparent pointer-events-none z-10" />
+			
+			<div className="mx-auto w-full max-w-6xl space-y-5 px-4 relative z-[1]">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					whileInView={{ opacity: 1, y: 0 }}
@@ -117,6 +120,9 @@ export function Pricing() {
 					</motion.div>
 				</div>
 			</div>
+			
+			{/* Gradient inférieur pour transition vers le footer */}
+			<div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-black pointer-events-none z-10" />
 		</section>
 	);
 }
