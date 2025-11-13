@@ -1,5 +1,5 @@
-import { LoginForm } from "@/components/login-form";
-import { DitherBackground } from "@/components/dither-background";
+import { LoginForm } from "@/components/auth/login-form";
+import { DitherBackground } from "@/components/backgrounds/dither-background";
 import { DITHER_COLORS } from "@/lib/dither-presets";
 
 export default function AuthPage() {

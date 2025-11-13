@@ -1,5 +1,5 @@
-import { RegisterForm } from "@/components/register-form";
-import { DitherBackground } from "@/components/dither-background";
+import { RegisterForm } from "@/components/auth/register-form";
+import { DitherBackground } from "@/components/backgrounds/dither-background";
 import { DITHER_COLORS } from "@/lib/dither-presets";
 
 export default function RegisterPage() {

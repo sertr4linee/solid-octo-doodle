@@ -3,7 +3,7 @@ import { Equal, X } from "@aliimam/icons";
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button"; 
-import { Menus } from "@/components/menus";
+import { Menus } from "@/components/layout/menus";
 
 const menuItems = [
   { name: "Features", href: "#features" },

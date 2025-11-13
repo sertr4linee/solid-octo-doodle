@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { LiquidButton } from "@/components/ui/button";
 import { MoveRight, Sparkles } from "lucide-react";
-import { DitherBackground } from "@/components/dither-background";
+import { DitherBackground } from "@/components/backgrounds/dither-background";
 import { DITHER_COLORS } from "@/lib/dither-presets";
 import Link from "next/link";
 
