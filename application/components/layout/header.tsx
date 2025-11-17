@@ -4,6 +4,8 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button"; 
 import { Menus } from "@/components/layout/menus";
+import { UserButton } from "@/components/layout/user-button";
+import { useSession } from "@/lib/auth-client";
 
 const menuItems = [
   { name: "Features", href: "#features" },
@@ -14,6 +16,7 @@ const menuItems = [
 const Header = () => {
   const [menuState, setMenuState] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
+  const { data: session } = useSession();
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -85,15 +88,19 @@ const Header = () => {
                   </ul>
                 </div>
                 <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-2 sm:space-y-0">
-                  <Button
-                    variant={"default"}
-                    asChild
-                    className={cn("bg-blue-600 hover:bg-blue-700", isScrolled && "lg:hidden")}
-                  >
-                    <a href="/auth/register">
-                      <span>Get Started</span>
-                    </a>
-                  </Button>
+                  {session?.user ? (
+                    <UserButton />
+                  ) : (
+                    <Button
+                      variant={"default"}
+                      asChild
+                      className={cn("bg-blue-600 hover:bg-blue-700", isScrolled && "lg:hidden")}
+                    >
+                      <a href="/auth">
+                        <span>Get Started</span>
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

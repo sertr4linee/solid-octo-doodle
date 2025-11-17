@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-import { magicLink } from "better-auth/plugins";
+import { magicLink, organization } from "better-auth/plugins";
 import { prisma } from "./prisma";
 import nodemailer from "nodemailer";
 
@@ -64,6 +64,32 @@ export const auth = betterAuth({
         }
       },
       expiresIn: 300, // 5 minutes
+    }),
+    organization({
+      async sendInvitationEmail(data) {
+        // TODO: Envoyer l'email d'invitation via le transporteur
+        try {
+          const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/accept-invitation/${data.id}`;
+          await transporter.sendMail({
+            from: process.env.EMAIL_FROM,
+            to: data.email,
+            subject: `Invitation to join ${data.organization.name}`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>You've been invited!</h2>
+                <p>You've been invited to join <strong>${data.organization.name}</strong>.</p>
+                <a href="${inviteUrl}" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; margin: 20px 0;">
+                  Accept Invitation
+                </a>
+                <p>Or copy and paste this link into your browser:</p>
+                <p style="word-break: break-all; color: #666;">${inviteUrl}</p>
+              </div>
+            `,
+          });
+        } catch (error) {
+          console.error("Error sending invitation email:", error);
+        }
+      },
     }),
   ],
 });
