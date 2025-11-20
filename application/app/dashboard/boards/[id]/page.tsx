@@ -110,6 +110,7 @@ export default function BoardDetailPage({
   const [newListName, setNewListName] = useState("");
   const [editingBoardName, setEditingBoardName] = useState(false);
   const [boardName, setBoardName] = useState("");
+  const [showActivity, setShowActivity] = useState(false);
 
   // Socket.IO connection
   const { isConnected, on, off } = useSocket({
@@ -138,12 +139,45 @@ export default function BoardDetailPage({
       router.push("/dashboard/boards");
     };
 
+    const handleListCreated = (data: any) => {
+      console.log("📝 List created:", data);
+      toast.success("New list created");
+      loadBoard(boardId);
+    };
+
+    const handleTaskCreated = (data: any) => {
+      console.log("✅ Task created:", data);
+      // Mettre à jour l'état local au lieu de recharger
+      setBoard((prev) => {
+        if (!prev) return prev;
+        
+        const updatedLists = prev.lists.map((list) => {
+          if (list.id === data.data.listId) {
+            return {
+              ...list,
+              tasks: [...list.tasks, data.data.task],
+            };
+          }
+          return list;
+        });
+
+        return {
+          ...prev,
+          lists: updatedLists,
+        };
+      });
+    };
+
     on("board:updated", handleBoardUpdated);
     on("board:deleted", handleBoardDeleted);
+    on("list:created", handleListCreated);
+    on("task:created", handleTaskCreated);
 
     return () => {
       off("board:updated", handleBoardUpdated);
       off("board:deleted", handleBoardDeleted);
+      off("list:created", handleListCreated);
+      off("task:created", handleTaskCreated);
     };
   }, [isConnected, boardId, on, off, router]);
 
@@ -237,6 +271,29 @@ export default function BoardDetailPage({
       router.push("/dashboard/boards");
     } catch (error) {
       toast.error("Failed to delete board");
+    }
+  };
+
+  const handleAddList = async () => {
+    if (!board || !newListName.trim()) return;
+
+    try {
+      const response = await fetch(`/api/boards/${board.id}/lists`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newListName }),
+      });
+
+      if (response.ok) {
+        toast.success("List created");
+        setNewListName("");
+        setIsAddListOpen(false);
+        loadBoard(board.id);
+      } else {
+        toast.error("Failed to create list");
+      }
+    } catch (error) {
+      toast.error("Failed to create list");
     }
   };
 
@@ -363,13 +420,13 @@ export default function BoardDetailPage({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setShowActivity(!showActivity)}>
+                <Activity className="h-4 w-4 mr-2" />
+                {showActivity ? "Hide" : "Show"} Activity
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Activity className="h-4 w-4 mr-2" />
-                Activity
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleArchiveBoard}>
@@ -394,27 +451,100 @@ export default function BoardDetailPage({
       </div>
 
       {/* Board Content */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4">
-        <div className="flex gap-4 h-full">
-          {/* Lists */}
-          {board.lists
-            .sort((a, b) => a.position - b.position)
-            .map((list) => (
-              <ListColumn key={list.id} list={list} boardId={board.id} />
-            ))}
+      <div className="flex-1 overflow-hidden p-4 flex gap-4">
+        {/* Lists Container */}
+        <div className="flex-1 overflow-x-auto overflow-y-hidden">
+          <div className="flex gap-4 h-full">
+            {/* Lists */}
+            {board.lists
+              .sort((a, b) => a.position - b.position)
+              .map((list) => (
+                <ListColumn key={list.id} list={list} boardId={board.id} />
+              ))}
 
-          {/* Add List Button */}
-          <div className="flex-shrink-0 w-72">
-            <Button
-              variant="ghost"
-              className="w-full h-auto min-h-[100px] bg-white/20 hover:bg-white/30 text-white border-2 border-dashed border-white/40"
-              onClick={() => setIsAddListOpen(true)}
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              Add another list
-            </Button>
+            {/* Add List Button */}
+            {isAddListOpen ? (
+              <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg p-3">
+                <Input
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  placeholder="Enter list name..."
+                  className="mb-2"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddList();
+                    if (e.key === "Escape") {
+                      setIsAddListOpen(false);
+                      setNewListName("");
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <Button size="sm" onClick={handleAddList}>
+                    Add list
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setIsAddListOpen(false);
+                      setNewListName("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-shrink-0 w-72">
+                <Button
+                  variant="ghost"
+                  className="w-full h-auto min-h-[100px] bg-white/20 hover:bg-white/30 text-white border-2 border-dashed border-white/40"
+                  onClick={() => setIsAddListOpen(true)}
+                >
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add another list
+                </Button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Activity Sidebar */}
+        {showActivity && (
+          <div className="w-80 bg-white/95 backdrop-blur-sm rounded-lg shadow-xl p-4 overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Activity
+            </h3>
+            <div className="space-y-3">
+              {board.activities.slice(0, 20).map((activity) => (
+                <div key={activity.id} className="flex gap-3 text-sm">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    <AvatarImage src={activity.user.image} />
+                    <AvatarFallback className="text-xs">
+                      {activity.user.name?.charAt(0) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-gray-900">
+                      <span className="font-semibold">{activity.user.name}</span>{" "}
+                      {activity.description}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              {board.activities.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  No activity yet
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Settings Dialog */}
@@ -452,24 +582,48 @@ export default function BoardDetailPage({
 function ListColumn({ list, boardId }: { list: any; boardId: string }) {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleAddTask = async () => {
-    if (!newTaskTitle.trim()) return;
+    if (!newTaskTitle.trim() || isCreating) return;
 
-    // TODO: Implement task creation API
-    toast.success("Task created (API not yet implemented)");
-    setNewTaskTitle("");
-    setIsAddingTask(false);
+    setIsCreating(true);
+    try {
+      const response = await fetch(`/api/boards/${boardId}/lists/${list.id}/tasks`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTaskTitle }),
+      });
+
+      if (response.ok) {
+        toast.success("Task created");
+        setNewTaskTitle("");
+        setIsAddingTask(false);
+        // Socket.IO event will update the board automatically
+      } else {
+        toast.error("Failed to create task");
+      }
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast.error("Failed to create task");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
-    <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg p-3 flex flex-col max-h-full">
+    <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg p-3 flex flex-col max-h-full shadow-md">
       {/* List Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900">{list.name}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-gray-900">{list.name}</h3>
+          <Badge variant="secondary" className="text-xs">
+            {list.tasks.length}
+          </Badge>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-200">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -504,24 +658,33 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
             rows={3}
             className="resize-none"
             autoFocus
+            disabled={isCreating}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleAddTask();
               }
-              if (e.key === "Escape") {
+              if (e.key === "Escape" && !isCreating) {
                 setIsAddingTask(false);
                 setNewTaskTitle("");
               }
             }}
           />
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleAddTask}>
-              Add card
+            <Button size="sm" onClick={handleAddTask} disabled={isCreating}>
+              {isCreating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                "Add card"
+              )}
             </Button>
             <Button
               size="sm"
               variant="ghost"
+              disabled={isCreating}
               onClick={() => {
                 setIsAddingTask(false);
                 setNewTaskTitle("");
@@ -546,29 +709,97 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
 }
 
 function TaskCard({ task }: { task: any }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <Card className="cursor-pointer hover:shadow-md transition-shadow bg-white">
-      <CardContent className="p-3 space-y-2">
-        <p className="text-sm font-medium text-gray-900">{task.title}</p>
-        {task.description && (
-          <p className="text-xs text-gray-600 line-clamp-2">{task.description}</p>
-        )}
-        <div className="flex items-center justify-between">
-          {task.assignee && (
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={task.assignee.image} />
-              <AvatarFallback className="text-xs">
-                {task.assignee.name?.charAt(0) || "?"}
-              </AvatarFallback>
-            </Avatar>
+    <>
+      <Card
+        className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all bg-white group"
+        onClick={() => setIsOpen(true)}
+      >
+        <CardContent className="p-3 space-y-2">
+          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+            {task.title}
+          </p>
+          {task.description && (
+            <p className="text-xs text-gray-600 line-clamp-2">{task.description}</p>
           )}
-          {task._count.comments > 0 && (
-            <Badge variant="secondary" className="text-xs">
-              💬 {task._count.comments}
-            </Badge>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2">
+              {task.assignee && (
+                <Avatar className="h-6 w-6 border-2 border-white shadow-sm">
+                  <AvatarImage src={task.assignee.image} />
+                  <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-500 text-white">
+                    {task.assignee.name?.charAt(0) || "?"}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+            </div>
+            {task._count.comments > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                💬 {task._count.comments}
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Task Detail Modal */}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{task.title}</DialogTitle>
+            {task.description && (
+              <DialogDescription className="text-base mt-2">
+                {task.description}
+              </DialogDescription>
+            )}
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            {/* Task Details */}
+            <div className="space-y-4">
+              <div>
+                <Label className="text-xs text-muted-foreground">Assigned to</Label>
+                {task.assignee ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={task.assignee.image} />
+                      <AvatarFallback>
+                        {task.assignee.name?.charAt(0) || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium">{task.assignee.name}</span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-1">No one assigned</p>
+                )}
+              </div>
+
+              {task._count.comments > 0 && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Comments</Label>
+                  <p className="text-sm mt-1">{task._count.comments} comments</p>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm">
+                <Users className="h-4 w-4 mr-2" />
+                Assign
+              </Button>
+              <Button variant="outline" size="sm">
+                Edit
+              </Button>
+              <Button variant="outline" size="sm" className="text-red-600">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
