@@ -69,17 +69,17 @@ const dashboardRoutes: Route[] = [
     subs: [
       {
         title: "My Boards",
-        link: "/dashboard/boards",
+        link: "/dashboard/boards?filter=my",
         icon: <LayoutDashboard className="size-4" />,
       },
       {
         title: "Shared with me",
-        link: "/dashboard/boards/shared",
+        link: "/dashboard/boards?filter=shared",
         icon: <Users className="size-4" />,
       },
       {
         title: "Archived",
-        link: "/dashboard/boards/archived",
+        link: "/dashboard/boards?filter=archived",
         icon: <Archive className="size-4" />,
       },
     ],

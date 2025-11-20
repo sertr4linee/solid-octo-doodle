@@ -8,9 +8,9 @@ datasource db {
 }
 
 model User {
-  id            String       @id
+  id            String         @id
   name          String
-  email         String       @unique
+  email         String         @unique
   emailVerified Boolean
   image         String?
   createdAt     DateTime
@@ -19,6 +19,11 @@ model User {
   member        Member[]
   sessions      Session[]
   teamMember    teamMember[]
+  boards        Board[]
+  boardMembers  BoardMember[]
+  tasks         Task[]
+  comments      Comment[]
+  activities    Activity[]
 
   @@map("user")
 }
@@ -80,6 +85,7 @@ model Organization {
   invitations Invitation[]
   members     Member[]
   team        team[]
+  boards      Board[]
 
   @@map("organization")
 }
@@ -127,4 +133,102 @@ model teamMember {
   createdAt DateTime
   team      team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Boards System
+model Board {
+  id             String        @id
+  name           String
+  description    String?
+  organizationId String
+  createdById    String
+  visibility     String        @default("private") // private, organization, public
+  background     String?       // Color or image URL
+  starred        Boolean       @default(false)
+  archived       Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy      User          @relation(fields: [createdById], references: [id])
+  members        BoardMember[]
+  lists          List[]
+  activities     Activity[]
+
+  @@map("board")
+}
+
+model BoardMember {
+  id        String   @id
+  boardId   String
+  userId    String
+  role      String   @default("member") // owner, admin, member
+  createdAt DateTime @default(now())
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+  @@map("board_member")
+}
+
+model List {
+  id        String   @id
+  name      String
+  boardId   String
+  position  Int
+  archived  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@map("list")
+}
+
+model Task {
+  id          String    @id
+  title       String
+  description String?
+  listId      String
+  position    Int
+  assigneeId  String?
+  dueDate     DateTime?
+  labels      String?   // JSON array of labels
+  archived    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignee    User?     @relation(fields: [assigneeId], references: [id])
+  comments    Comment[]
+  activities  Activity[]
+
+  @@map("task")
+}
+
+model Comment {
+  id        String   @id
+  content   String
+  taskId    String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("comment")
+}
+
+model Activity {
+  id          String   @id
+  type        String   // board_created, task_moved, member_added, etc.
+  description String
+  metadata    String?  // JSON metadata
+  boardId     String?
+  taskId      String?
+  userId      String
+  createdAt   DateTime @default(now())
+  board       Board?   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  task        Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("activity")
 }
