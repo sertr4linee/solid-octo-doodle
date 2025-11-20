@@ -14,6 +14,7 @@ import {
   SidebarMenuItem as SidebarMenuSubItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ export type Route = {
   title: string;
   icon?: React.ReactNode;
   link: string;
+  badge?: string;
   subs?: {
     title: string;
     link: string;
@@ -32,7 +34,13 @@ export type Route = {
   }[];
 };
 
-export default function DashboardNavigation({ routes }: { routes: Route[] }) {
+export default function DashboardNavigation({ 
+  routes, 
+  notificationCount = 0 
+}: { 
+  routes: Route[];
+  notificationCount?: number;
+}) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [openCollapsible, setOpenCollapsible] = useState<string | null>(null);
@@ -116,8 +124,21 @@ export default function DashboardNavigation({ routes }: { routes: Route[] }) {
                 >
                   {route.icon}
                   {!isCollapsed && (
-                    <span className="ml-2 text-sm font-medium">
+                    <span className="ml-2 text-sm font-medium flex items-center gap-2">
                       {route.title}
+                      {route.badge === "notification-count" && notificationCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
+                        >
+                          {notificationCount > 9 ? "9+" : notificationCount}
+                        </Badge>
+                      )}
+                    </span>
+                  )}
+                  {isCollapsed && route.badge === "notification-count" && notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] flex items-center justify-center text-destructive-foreground">
+                      {notificationCount > 9 ? "9+" : notificationCount}
                     </span>
                   )}
                 </Link>

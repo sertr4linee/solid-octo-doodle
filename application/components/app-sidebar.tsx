@@ -15,19 +15,20 @@ import {
   Home,
   LayoutDashboard,
   ListTodo,
-  Package2,
   Settings,
   Users,
-  Sparkles,
-  Bell,
   Calendar,
   Archive,
+  Building2,
+  Bell,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import type { Route } from "./layout/nav-main";
 import DashboardNavigation from "@/components/layout/nav-main";
 import { NotificationsPopover } from "@/components/layout/nav-notifications";
 import { TeamSwitcher } from "@/components/layout/team-switcher";
+import { useNotificationCount } from "@/hooks/use-notification-count";
+import { Badge } from "@/components/ui/badge";
 
 const sampleNotifications = [
   {
@@ -119,16 +120,17 @@ const dashboardRoutes: Route[] = [
     link: "/dashboard/team",
   },
   {
-    id: "integrations",
-    title: "Integrations",
-    icon: <Package2 className="size-4" />,
-    link: "/dashboard/integrations",
+    id: "organizations",
+    title: "Organizations",
+    icon: <Building2 className="size-4" />,
+    link: "/dashboard/organizations",
   },
   {
     id: "notifications",
     title: "Notifications",
     icon: <Bell className="size-4" />,
     link: "/dashboard/notifications",
+    badge: "notification-count",
   },
   {
     id: "settings",
@@ -153,6 +155,7 @@ const teams = [
 export function DashboardSidebar() {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
+  const { count } = useNotificationCount();
 
   return (
     <Sidebar variant="floating" collapsible="icon">
@@ -190,7 +193,7 @@ export function DashboardSidebar() {
         </motion.div>
       </SidebarHeader>
       <SidebarContent className="gap-4 px-2 py-4">
-        <DashboardNavigation routes={dashboardRoutes} />
+        <DashboardNavigation routes={dashboardRoutes} notificationCount={count} />
       </SidebarContent>
       <SidebarFooter className="px-2">
         <TeamSwitcher teams={teams} />

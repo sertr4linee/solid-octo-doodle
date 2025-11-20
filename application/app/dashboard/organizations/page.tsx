@@ -42,12 +42,23 @@ export default function OrganizationsPage() {
   const loadOrganizations = async () => {
     try {
       setIsLoading(true);
-      // For now, we'll use an empty array until we implement the backend API
-      // You can replace this with actual API call once backend is ready
-      setOrganizations([]);
+      // Charger les organisations de l'utilisateur
+      const { data, error } = await authClient.organization.list();
+      
+      console.log("📊 Organizations loaded:", { data, error });
+      
+      if (error) {
+        console.error("Error loading organizations:", error);
+        toast.error("Failed to load organizations");
+        setOrganizations([]);
+      } else {
+        console.log("✅ Setting organizations:", data);
+        setOrganizations(data || []);
+      }
     } catch (error) {
       console.error("Error loading organizations:", error);
       toast.error("Failed to load organizations");
+      setOrganizations([]);
     } finally {
       setIsLoading(false);
     }
