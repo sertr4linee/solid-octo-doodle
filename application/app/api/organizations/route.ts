@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { emitToOrganization, broadcast } from "@/lib/socket";
 
 // GET - List all organizations for the current user
 export async function GET() {
@@ -98,6 +99,7 @@ export async function POST(request: Request) {
     // Create organization
     const organization = await prisma.organization.create({
       data: {
+        id: `org_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         name,
         slug,
         logo,
@@ -115,6 +117,14 @@ export async function POST(request: Request) {
         role: "owner",
         createdAt: new Date(),
       },
+    });
+
+    // Émettre l'événement Socket.IO
+    broadcast("organization:created", {
+      id: organization.id,
+      name: organization.name,
+      slug: organization.slug,
+      userId: session.user.id,
     });
 
     return NextResponse.json(organization, { status: 201 });
@@ -167,6 +177,12 @@ export async function DELETE(request: Request) {
     // Delete organization (cascade will delete members, invitations, teams)
     await prisma.organization.delete({
       where: { id: organizationId },
+    });
+
+    // Émettre l'événement Socket.IO
+    emitToOrganization(organizationId, "organization:deleted", {
+      id: organizationId,
+      userId: session.user.id,
     });
 
     return NextResponse.json({ success: true });

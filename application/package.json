@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "tsx watch server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production tsx server.ts",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -49,12 +49,15 @@
     "prisma": "^6.19.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "three": "^0.181.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/http-server": "^0.12.4",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.3",
     "@types/pg": "^8.15.6",
@@ -63,6 +66,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "tw-animate-css": "^1.4.0",
     "typescript": "^5"
   }

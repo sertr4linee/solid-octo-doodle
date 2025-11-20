@@ -1,0 +1,132 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import type { SocketEvent, SocketData } from "@/lib/socket";
+
+interface UseSocketOptions {
+  organizationId?: string;
+  boardId?: string;
+  enabled?: boolean;
+}
+
+export function useSocket(options: UseSocketOptions = {}) {
+  const { organizationId, boardId, enabled = true } = options;
+  const [isConnected, setIsConnected] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const socketRef = useRef<Socket | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 5;
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    // Récupérer le token d'authentification
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("better-auth.session_token="))
+      ?.split("=")[1];
+
+    if (!token) {
+      setError(new Error("No authentication token found"));
+      return;
+    }
+
+    // Créer la connexion Socket.IO
+    const socket = io(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000", {
+      auth: { token },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: maxReconnectAttempts,
+    });
+
+    socketRef.current = socket;
+
+    // Event handlers
+    socket.on("connect", () => {
+      console.log("✅ Socket.IO connected");
+      setIsConnected(true);
+      setError(null);
+      reconnectAttemptsRef.current = 0;
+
+      // Rejoindre les rooms appropriées
+      if (organizationId) {
+        socket.emit("join:organization", organizationId);
+        console.log(`📍 Joined organization room: ${organizationId}`);
+      }
+      if (boardId) {
+        socket.emit("join:board", boardId);
+        console.log(`📍 Joined board room: ${boardId}`);
+      }
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("❌ Socket.IO disconnected:", reason);
+      setIsConnected(false);
+      
+      if (reason === "io server disconnect") {
+        // Le serveur a déconnecté, il faut reconnecter manuellement
+        socket.connect();
+      }
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("❌ Socket.IO connection error:", err);
+      setError(err);
+      reconnectAttemptsRef.current++;
+
+      if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+        setError(new Error("Max reconnection attempts reached"));
+        socket.disconnect();
+      }
+    });
+
+    socket.on("pong", (latency: number) => {
+      console.log(`🏓 Pong received (latency: ${latency}ms)`);
+    });
+
+    // Cleanup
+    return () => {
+      if (organizationId) {
+        socket.emit("leave:organization", organizationId);
+      }
+      if (boardId) {
+        socket.emit("leave:board", boardId);
+      }
+      socket.disconnect();
+    };
+  }, [enabled, organizationId, boardId]);
+
+  // Fonction pour écouter des événements
+  const on = <T = any>(event: SocketEvent, callback: (data: SocketData<T>) => void) => {
+    if (!socketRef.current) return;
+    socketRef.current.on(event, callback);
+  };
+
+  // Fonction pour arrêter d'écouter des événements
+  const off = (event: SocketEvent, callback?: (...args: any[]) => void) => {
+    if (!socketRef.current) return;
+    if (callback) {
+      socketRef.current.off(event, callback);
+    } else {
+      socketRef.current.off(event);
+    }
+  };
+
+  // Fonction pour émettre des événements
+  const emit = (event: SocketEvent, data: any) => {
+    if (!socketRef.current) return;
+    socketRef.current.emit(event, data);
+  };
+
+  return {
+    socket: socketRef.current,
+    isConnected,
+    error,
+    on,
+    off,
+    emit,
+  };
+}

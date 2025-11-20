@@ -25,6 +25,7 @@ import { Label } from "@/components/ui/label";
 import { Building2, Plus, Users, Mail, Trash2, Loader2, ArrowRight, Crown, Shield, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { useSocket } from "@/hooks/use-socket";
 
 export default function OrganizationsPage() {
   const router = useRouter();
@@ -37,9 +38,48 @@ export default function OrganizationsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
+  // Socket.IO connection
+  const { isConnected, on, off } = useSocket({ enabled: true });
+
   useEffect(() => {
     loadOrganizations();
   }, []);
+
+  // Écouter les événements Socket.IO
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const handleOrgCreated = (data: any) => {
+      console.log("🆕 New organization created:", data);
+      toast.success("A new organization has been created!");
+      loadOrganizations();
+    };
+
+    const handleOrgUpdated = (data: any) => {
+      console.log("✏️ Organization updated:", data);
+      setOrganizations((prev) =>
+        prev.map((org) =>
+          org.id === data.data.id ? { ...org, ...data.data } : org
+        )
+      );
+    };
+
+    const handleOrgDeleted = (data: any) => {
+      console.log("🗑️ Organization deleted:", data);
+      toast.info("An organization has been deleted");
+      setOrganizations((prev) => prev.filter((org) => org.id !== data.data.id));
+    };
+
+    on("organization:created", handleOrgCreated);
+    on("organization:updated", handleOrgUpdated);
+    on("organization:deleted", handleOrgDeleted);
+
+    return () => {
+      off("organization:created", handleOrgCreated);
+      off("organization:updated", handleOrgUpdated);
+      off("organization:deleted", handleOrgDeleted);
+    };
+  }, [isConnected, on, off]);
 
   const loadOrganizations = async () => {
     try {
