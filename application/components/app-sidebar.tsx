@@ -188,7 +188,10 @@ export function DashboardSidebar() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          <NotificationsPopover notifications={sampleNotifications} />
+          <NotificationsPopover 
+            notifications={sampleNotifications} 
+            notificationCount={count}
+          />
           <SidebarTrigger />
         </motion.div>
       </SidebarHeader>
