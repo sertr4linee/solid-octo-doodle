@@ -218,26 +218,56 @@ export default function NotificationsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Notifications</h1>
-        <p className="text-muted-foreground">
-          Manage your invitations and notifications
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
+            Notifications
+            {pendingInvitations.length > 0 && (
+              <Badge variant="destructive" className="text-sm">
+                {pendingInvitations.length} new
+              </Badge>
+            )}
+          </h1>
+          <p className="text-muted-foreground">
+            Manage your invitations and notifications
+          </p>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="pending" className="gap-2">
+          <TabsTrigger value="pending" className="gap-2 relative">
             Pending
             {pendingInvitations.length > 0 && (
-              <Badge variant="secondary" className="ml-1">
+              <Badge variant="destructive" className="ml-1 h-5 px-2">
                 {pendingInvitations.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="accepted">Accepted</TabsTrigger>
-          <TabsTrigger value="rejected">Declined</TabsTrigger>
-          <TabsTrigger value="expired">Expired</TabsTrigger>
+          <TabsTrigger value="accepted" className="gap-2">
+            Accepted
+            {acceptedInvitations.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-2">
+                {acceptedInvitations.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="gap-2">
+            Declined
+            {rejectedInvitations.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-2">
+                {rejectedInvitations.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="expired" className="gap-2">
+            Expired
+            {expiredInvitations.length > 0 && (
+              <Badge variant="secondary" className="ml-1 h-5 px-2">
+                {expiredInvitations.length}
+              </Badge>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4 mt-6">

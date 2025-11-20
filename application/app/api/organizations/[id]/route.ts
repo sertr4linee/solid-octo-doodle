@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // GET - Get organization details
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const organizationId = params.id;
+    const { id: organizationId } = await params;
 
     // Check if user is a member
     const member = await prisma.member.findFirst({
@@ -102,7 +102,7 @@ export async function GET(
 // PATCH - Update organization
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -113,7 +113,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const organizationId = params.id;
+    const { id: organizationId } = await params;
 
     // Check if user is owner or admin
     const member = await prisma.member.findFirst({

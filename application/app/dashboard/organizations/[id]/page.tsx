@@ -103,7 +103,7 @@ interface Organization {
 export default function OrganizationDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
   const [organization, setOrganization] = useState<Organization | null>(null);
@@ -115,15 +115,28 @@ export default function OrganizationDetailPage({
   const [editName, setEditName] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadOrganization();
-  }, [params.id]);
+    const initParams = async () => {
+      const resolvedParams = await params;
+      setOrganizationId(resolvedParams.id);
+    };
+    initParams();
+  }, [params]);
+
+  useEffect(() => {
+    if (organizationId) {
+      loadOrganization();
+    }
+  }, [organizationId]);
 
   const loadOrganization = async () => {
+    if (!organizationId) return;
+    
     try {
       setLoading(true);
-      const response = await fetch(`/api/organizations/${params.id}`);
+      const response = await fetch(`/api/organizations/${organizationId}`);
       if (response.ok) {
         const data = await response.json();
         setOrganization(data);
@@ -141,13 +154,13 @@ export default function OrganizationDetailPage({
   };
 
   const handleInvite = async () => {
-    if (!inviteEmail) {
+    if (!inviteEmail || !organizationId) {
       toast.error("Please enter an email address");
       return;
     }
 
     try {
-      const response = await fetch(`/api/organizations/${params.id}/invitations`, {
+      const response = await fetch(`/api/organizations/${organizationId}/invitations`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
@@ -170,8 +183,10 @@ export default function OrganizationDetailPage({
   };
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
+    if (!organizationId) return;
+    
     try {
-      const response = await fetch(`/api/organizations/${params.id}/members`, {
+      const response = await fetch(`/api/organizations/${organizationId}/members`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, role: newRole }),
@@ -191,9 +206,11 @@ export default function OrganizationDetailPage({
   };
 
   const handleRemoveMember = async (userId: string) => {
+    if (!organizationId) return;
+    
     try {
       const response = await fetch(
-        `/api/organizations/${params.id}/members?userId=${userId}`,
+        `/api/organizations/${organizationId}/members?userId=${userId}`,
         { method: "DELETE" }
       );
 
@@ -212,9 +229,11 @@ export default function OrganizationDetailPage({
   };
 
   const handleCancelInvitation = async (invitationId: string) => {
+    if (!organizationId) return;
+    
     try {
       const response = await fetch(
-        `/api/organizations/${params.id}/invitations?invitationId=${invitationId}`,
+        `/api/organizations/${organizationId}/invitations?invitationId=${invitationId}`,
         { method: "DELETE" }
       );
 
@@ -232,13 +251,13 @@ export default function OrganizationDetailPage({
   };
 
   const handleUpdateOrganization = async () => {
-    if (!editName) {
+    if (!editName || !organizationId) {
       toast.error("Organization name is required");
       return;
     }
 
     try {
-      const response = await fetch(`/api/organizations/${params.id}`, {
+      const response = await fetch(`/api/organizations/${organizationId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: editName }),
@@ -259,9 +278,11 @@ export default function OrganizationDetailPage({
   };
 
   const handleDeleteOrganization = async () => {
+    if (!organizationId) return;
+    
     try {
       const response = await fetch(
-        `/api/organizations?organizationId=${params.id}`,
+        `/api/organizations?organizationId=${organizationId}`,
         { method: "DELETE" }
       );
 

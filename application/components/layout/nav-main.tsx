@@ -124,12 +124,12 @@ export default function DashboardNavigation({
                 >
                   {route.icon}
                   {!isCollapsed && (
-                    <span className="ml-2 text-sm font-medium flex items-center gap-2">
+                    <span className="ml-2 text-sm font-medium flex items-center gap-2 flex-1">
                       {route.title}
                       {route.badge === "notification-count" && notificationCount > 0 && (
                         <Badge 
                           variant="destructive" 
-                          className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs"
+                          className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse"
                         >
                           {notificationCount > 9 ? "9+" : notificationCount}
                         </Badge>
@@ -137,8 +137,8 @@ export default function DashboardNavigation({
                     </span>
                   )}
                   {isCollapsed && route.badge === "notification-count" && notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] flex items-center justify-center text-destructive-foreground">
-                      {notificationCount > 9 ? "9+" : notificationCount}
+                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-destructive text-[10px] flex items-center justify-center text-destructive-foreground animate-pulse font-bold">
+                      {notificationCount > 9 ? "9" : notificationCount}
                     </span>
                   )}
                 </Link>

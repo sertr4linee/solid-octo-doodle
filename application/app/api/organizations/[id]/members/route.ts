@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // GET - List all members of an organization
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -17,7 +17,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const organizationId = params.id;
+    const { id: organizationId } = await params;
 
     // Check if user is a member
     const userMember = await prisma.member.findFirst({
@@ -68,7 +68,7 @@ export async function GET(
 // PATCH - Update member role
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -79,7 +79,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const organizationId = params.id;
+    const { id: organizationId } = await params;
     const body = await request.json();
     const { userId, role } = body;
 
@@ -185,7 +185,7 @@ export async function PATCH(
 // DELETE - Remove member from organization
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({
@@ -196,7 +196,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const organizationId = params.id;
+    const { id: organizationId } = await params;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
 
