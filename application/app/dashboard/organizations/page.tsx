@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,10 +22,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Building2, Plus, Users, Mail, Trash2, Loader2 } from "lucide-react";
+import { Building2, Plus, Users, Mail, Trash2, Loader2, ArrowRight, Crown, Shield, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 export default function OrganizationsPage() {
+  const router = useRouter();
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newOrgName, setNewOrgName] = useState("");
@@ -42,18 +44,17 @@ export default function OrganizationsPage() {
   const loadOrganizations = async () => {
     try {
       setIsLoading(true);
-      // Charger les organisations de l'utilisateur
-      const { data, error } = await authClient.organization.list();
+      // Utiliser le nouvel endpoint API
+      const response = await fetch("/api/organizations");
       
-      console.log("📊 Organizations loaded:", { data, error });
-      
-      if (error) {
-        console.error("Error loading organizations:", error);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Organizations loaded:", data);
+        setOrganizations(data || []);
+      } else {
+        console.error("Failed to load organizations");
         toast.error("Failed to load organizations");
         setOrganizations([]);
-      } else {
-        console.log("✅ Setting organizations:", data);
-        setOrganizations(data || []);
       }
     } catch (error) {
       console.error("Error loading organizations:", error);
@@ -71,17 +72,25 @@ export default function OrganizationsPage() {
     }
 
     try {
-      await authClient.organization.create({
-        name: newOrgName,
-        slug: newOrgSlug,
+      const response = await fetch("/api/organizations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newOrgName,
+          slug: newOrgSlug,
+        }),
       });
-      
-      toast.success("Organization created successfully");
-      
-      setNewOrgName("");
-      setNewOrgSlug("");
-      setIsCreateDialogOpen(false);
-      loadOrganizations();
+
+      if (response.ok) {
+        toast.success("Organization created successfully! 🎉");
+        setNewOrgName("");
+        setNewOrgSlug("");
+        setIsCreateDialogOpen(false);
+        loadOrganizations();
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Failed to create organization");
+      }
     } catch (error: any) {
       console.error("Error creating organization:", error);
       toast.error(error.message || "Failed to create organization");
@@ -95,19 +104,48 @@ export default function OrganizationsPage() {
     }
 
     try {
-      await authClient.organization.inviteMember({
-        email: inviteEmail,
-        organizationId: selectedOrgId,
-        role: "member",
+      const response = await fetch(`/api/organizations/${selectedOrgId}/invitations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: inviteEmail,
+          role: "member",
+        }),
       });
-      
-      toast.success("Invitation sent successfully");
-      
-      setInviteEmail("");
-      setIsInviteDialogOpen(false);
+
+      if (response.ok) {
+        toast.success("Invitation sent successfully! 📧");
+        setInviteEmail("");
+        setIsInviteDialogOpen(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.error || "Failed to send invitation");
+      }
     } catch (error: any) {
       console.error("Error inviting member:", error);
       toast.error(error.message || "Failed to send invitation");
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case "owner":
+        return <Crown className="h-3.5 w-3.5" />;
+      case "admin":
+        return <Shield className="h-3.5 w-3.5" />;
+      default:
+        return <UserIcon className="h-3.5 w-3.5" />;
+    }
+  };
+
+  const getRoleBadgeColor = (role: string) => {
+    switch (role) {
+      case "owner":
+        return "bg-purple-500/10 text-purple-500 border-purple-500/20";
+      case "admin":
+        return "bg-blue-500/10 text-blue-500 border-blue-500/20";
+      default:
+        return "bg-green-500/10 text-green-500 border-green-500/20";
     }
   };
 
@@ -183,33 +221,56 @@ export default function OrganizationsPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {organizations.map((org: any) => (
-          <Card key={org.id}>
+          <Card 
+            key={org.id}
+            className="hover:shadow-lg transition-all cursor-pointer group"
+            onClick={() => router.push(`/dashboard/organizations/${org.id}`)}
+          >
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                {org.name}
+              <CardTitle className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  {org.name}
+                </div>
+                <ArrowRight className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" />
               </CardTitle>
               <CardDescription>@{org.slug}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="h-4 w-4" />
-                <span>{org.members?.length || 0} members</span>
+                <span>{org.memberCount || 0} members</span>
               </div>
+              <Badge className={getRoleBadgeColor(org.role)}>
+                <span className="flex items-center gap-1.5">
+                  {getRoleIcon(org.role)}
+                  Your role: {org.role}
+                </span>
+              </Badge>
             </CardContent>
-            <CardFooter className="flex gap-2">
-              <Dialog open={isInviteDialogOpen && selectedOrgId === org.id} onOpenChange={setIsInviteDialogOpen}>
+            <CardFooter className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              <Dialog 
+                open={isInviteDialogOpen && selectedOrgId === org.id} 
+                onOpenChange={(open) => {
+                  setIsInviteDialogOpen(open);
+                  if (!open) setSelectedOrgId(null);
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setSelectedOrgId(org.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedOrgId(org.id);
+                      setIsInviteDialogOpen(true);
+                    }}
                   >
                     <Mail className="mr-2 h-4 w-4" />
                     Invite
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent onClick={(e) => e.stopPropagation()}>
                   <DialogHeader>
                     <DialogTitle>Invite Member to {org.name}</DialogTitle>
                     <DialogDescription>
