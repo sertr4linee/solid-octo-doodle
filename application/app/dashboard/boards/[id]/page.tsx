@@ -131,6 +131,7 @@ export default function BoardDetailPage({
     const handleBoardUpdated = (data: any) => {
       console.log("✏️ Board updated:", data);
       setBoard((prev) => (prev ? { ...prev, ...data.data } : null));
+      if (data.data.name) setBoardName(data.data.name);
     };
 
     const handleBoardDeleted = (data: any) => {
@@ -142,7 +143,36 @@ export default function BoardDetailPage({
     const handleListCreated = (data: any) => {
       console.log("📝 List created:", data);
       toast.success("New list created");
-      loadBoard(boardId);
+      setBoard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          lists: [...prev.lists, { ...data.data.list, tasks: [] }],
+        };
+      });
+    };
+
+    const handleListUpdated = (data: any) => {
+      console.log("✏️ List updated:", data);
+      setBoard((prev) => {
+        if (!prev) return prev;
+        const updatedLists = prev.lists.map((list) =>
+          list.id === data.data.id ? { ...list, ...data.data } : list
+        );
+        return { ...prev, lists: updatedLists };
+      });
+    };
+
+    const handleListDeleted = (data: any) => {
+      console.log("🗑️ List deleted:", data);
+      toast.info("List deleted");
+      setBoard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          lists: prev.lists.filter((list) => list.id !== data.data.listId),
+        };
+      });
     };
 
     const handleTaskCreated = (data: any) => {
@@ -168,16 +198,87 @@ export default function BoardDetailPage({
       });
     };
 
+    const handleTaskUpdated = (data: any) => {
+      console.log("✏️ Task updated:", data);
+      setBoard((prev) => {
+        if (!prev) return prev;
+        const updatedLists = prev.lists.map((list) => ({
+          ...list,
+          tasks: list.tasks.map((task) =>
+            task.id === data.data.id ? { ...task, ...data.data } : task
+          ),
+        }));
+        return { ...prev, lists: updatedLists };
+      });
+    };
+
+    const handleTaskDeleted = (data: any) => {
+      console.log("🗑️ Task deleted:", data);
+      toast.info("Task deleted");
+      setBoard((prev) => {
+        if (!prev) return prev;
+        const updatedLists = prev.lists.map((list) => ({
+          ...list,
+          tasks: list.tasks.filter((task) => task.id !== data.data.taskId),
+        }));
+        return { ...prev, lists: updatedLists };
+      });
+    };
+
+    const handleTaskMoved = (data: any) => {
+      console.log("🔄 Task moved:", data);
+      // Recharger le board pour avoir les positions correctes
+      loadBoard(boardId);
+    };
+
+    const handleMemberAdded = (data: any) => {
+      console.log("👤 Member added:", data);
+      toast.success(`${data.data.member.user.name} joined the board`);
+      setBoard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: [...prev.members, data.data.member],
+        };
+      });
+    };
+
+    const handleMemberRemoved = (data: any) => {
+      console.log("👋 Member removed:", data);
+      toast.info("A member left the board");
+      setBoard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          members: prev.members.filter((m) => m.user.id !== data.data.userId),
+        };
+      });
+    };
+
     on("board:updated", handleBoardUpdated);
     on("board:deleted", handleBoardDeleted);
+    on("board:member-added", handleMemberAdded);
+    on("board:member-removed", handleMemberRemoved);
     on("list:created", handleListCreated);
+    on("list:updated", handleListUpdated);
+    on("list:deleted", handleListDeleted);
     on("task:created", handleTaskCreated);
+    on("task:updated", handleTaskUpdated);
+    on("task:deleted", handleTaskDeleted);
+    on("task:moved", handleTaskMoved);
 
     return () => {
       off("board:updated", handleBoardUpdated);
       off("board:deleted", handleBoardDeleted);
+      off("board:member-added", handleMemberAdded);
+      off("board:member-removed", handleMemberRemoved);
       off("list:created", handleListCreated);
+      off("list:updated", handleListUpdated);
+      off("list:deleted", handleListDeleted);
       off("task:created", handleTaskCreated);
+      off("task:updated", handleTaskUpdated);
+      off("task:deleted", handleTaskDeleted);
+      off("task:moved", handleTaskMoved);
     };
   }, [isConnected, boardId, on, off, router]);
 
