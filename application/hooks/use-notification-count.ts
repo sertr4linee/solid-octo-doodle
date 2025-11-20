@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { toast } from "sonner";
 
 export function useNotificationCount() {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const previousCountRef = useRef(0);
 
   const fetchCount = async () => {
     try {
@@ -15,7 +17,22 @@ export function useNotificationCount() {
           (inv: any) =>
             inv.status === "pending" && new Date(inv.expiresAt) > new Date()
         );
-        setCount(pendingInvitations.length);
+        const newCount = pendingInvitations.length;
+        
+        // Si le nombre a augmenté, afficher une notification
+        if (!loading && newCount > previousCountRef.current) {
+          const newInvitationsCount = newCount - previousCountRef.current;
+          toast.success(
+            `🎉 You have ${newInvitationsCount} new invitation${newInvitationsCount > 1 ? 's' : ''}!`,
+            {
+              description: "Check your notifications to view and accept them.",
+              duration: 5000,
+            }
+          );
+        }
+        
+        previousCountRef.current = newCount;
+        setCount(newCount);
       }
     } catch (error) {
       console.error("Failed to fetch notification count:", error);
