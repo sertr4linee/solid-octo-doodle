@@ -8,9 +8,9 @@ datasource db {
 }
 
 model User {
-  id            String         @id
+  id            String        @id
   name          String
-  email         String         @unique
+  email         String        @unique
   emailVerified Boolean
   image         String?
   createdAt     DateTime
@@ -143,7 +143,7 @@ model Board {
   organizationId String
   createdById    String
   visibility     String        @default("private") // private, organization, public
-  background     String?       // Color or image URL
+  background     String? // Color or image URL
   starred        Boolean       @default(false)
   archived       Boolean       @default(false)
   createdAt      DateTime      @default(now())
@@ -185,19 +185,19 @@ model List {
 }
 
 model Task {
-  id          String    @id
+  id          String     @id
   title       String
   description String?
   listId      String
   position    Int
   assigneeId  String?
   dueDate     DateTime?
-  labels      String?   // JSON array of labels
-  archived    Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
-  assignee    User?     @relation(fields: [assigneeId], references: [id])
+  labels      String? // JSON array of labels
+  archived    Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  list        List       @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignee    User?      @relation(fields: [assigneeId], references: [id])
   comments    Comment[]
   activities  Activity[]
 
@@ -219,9 +219,9 @@ model Comment {
 
 model Activity {
   id          String   @id
-  type        String   // board_created, task_moved, member_added, etc.
+  type        String // board_created, task_moved, member_added, etc.
   description String
-  metadata    String?  // JSON metadata
+  metadata    String? // JSON metadata
   boardId     String?
   taskId      String?
   userId      String
