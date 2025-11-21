@@ -33,7 +33,13 @@ export function useSocket(options: UseSocketOptions = {}) {
     }
 
     // Créer la connexion Socket.IO
-    const socket = io(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000", {
+    const socketUrl = typeof window !== "undefined" 
+      ? `${window.location.protocol}//${window.location.host}`
+      : "http://localhost:3000";
+    
+    console.log(`🔌 Connecting to Socket.IO server at: ${socketUrl}`);
+    
+    const socket = io(socketUrl, {
       auth: { token },
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -58,7 +64,7 @@ export function useSocket(options: UseSocketOptions = {}) {
       }
       if (boardId) {
         socket.emit("join:board", boardId);
-        console.log(`📍 Joined board room: ${boardId}`);
+        console.log(`� Joined board room: ${boardId}`);
       }
     });
 
@@ -83,7 +89,8 @@ export function useSocket(options: UseSocketOptions = {}) {
       }
     });
 
-    socket.on("pong", (latency: number) => {
+    socket.on("pong", (data: { timestamp: number }) => {
+      const latency = Date.now() - data.timestamp;
       console.log(`🏓 Pong received (latency: ${latency}ms)`);
     });
 
@@ -99,9 +106,30 @@ export function useSocket(options: UseSocketOptions = {}) {
     };
   }, [enabled, organizationId, boardId]);
 
+  // Rejoindre les rooms quand les IDs changent (pour les connexions déjà établies)
+  useEffect(() => {
+    if (!socketRef.current || !isConnected) return;
+
+    if (boardId) {
+      console.log(`🔄 Attempting to join board room: ${boardId}`);
+      socketRef.current.emit("join:board", boardId);
+      console.log(`📋 Rejoined board room: ${boardId}`);
+    }
+
+    if (organizationId) {
+      console.log(`🔄 Attempting to join organization room: ${organizationId}`);
+      socketRef.current.emit("join:organization", organizationId);
+      console.log(`📍 Rejoined organization room: ${organizationId}`);
+    }
+  }, [boardId, organizationId, isConnected]);
+
   // Fonction pour écouter des événements
   const on = <T = any>(event: SocketEvent, callback: (data: SocketData<T>) => void) => {
-    if (!socketRef.current) return;
+    if (!socketRef.current) {
+      console.warn(`⚠️ Cannot listen to ${event}: Socket not initialized`);
+      return;
+    }
+    console.log(`👂 Listening to event: ${event}`);
     socketRef.current.on(event, callback);
   };
 

@@ -39,6 +39,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSocket } from "@/hooks/use-socket";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { SocketDebug } from "@/components/socket-debug";
 
 interface Board {
   id: string;
@@ -112,18 +113,19 @@ export default function BoardDetailPage({
   const [boardName, setBoardName] = useState("");
   const [showActivity, setShowActivity] = useState(false);
 
-  // Socket.IO connection
-  const { isConnected, on, off } = useSocket({
-    boardId: boardId,
-    enabled: !!boardId,
-  });
-
+  // Obtenir le boardId immédiatement
   useEffect(() => {
     params.then((p) => {
       setBoardId(p.id);
       loadBoard(p.id);
     });
   }, []);
+
+  // Socket.IO connection - se connecte dès que boardId est disponible
+  const { isConnected, on, off } = useSocket({
+    boardId: boardId || undefined,
+    enabled: !!boardId,
+  });
 
   useEffect(() => {
     if (!isConnected || !boardId) return;
@@ -150,6 +152,8 @@ export default function BoardDetailPage({
           lists: [...prev.lists, { ...data.data.list, tasks: [] }],
         };
       });
+      // Recharger pour avoir les activités à jour
+      setTimeout(() => loadBoard(boardId), 500);
     };
 
     const handleListUpdated = (data: any) => {
@@ -177,6 +181,7 @@ export default function BoardDetailPage({
 
     const handleTaskCreated = (data: any) => {
       console.log("✅ Task created:", data);
+      toast.success("Task created by " + (data.userId === boardId ? "you" : "another user"));
       // Mettre à jour l'état local au lieu de recharger
       setBoard((prev) => {
         if (!prev) return prev;
@@ -196,6 +201,8 @@ export default function BoardDetailPage({
           lists: updatedLists,
         };
       });
+      // Recharger pour avoir les activités à jour
+      setTimeout(() => loadBoard(boardId), 500);
     };
 
     const handleTaskUpdated = (data: any) => {
@@ -480,6 +487,18 @@ export default function BoardDetailPage({
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Socket.IO Status Indicator */}
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm">
+            <div
+              className={`h-2 w-2 rounded-full ${
+                isConnected ? "bg-green-400 animate-pulse" : "bg-red-400"
+              }`}
+            />
+            <span className="text-xs text-white font-medium">
+              {isConnected ? "Live" : "Offline"}
+            </span>
+          </div>
+
           {/* Members Avatars */}
           <div className="flex -space-x-2">
             {board.members.slice(0, 5).map((member) => (
@@ -676,6 +695,9 @@ export default function BoardDetailPage({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Socket.IO Debug Panel (dev only) */}
+      <SocketDebug isConnected={isConnected} boardId={boardId} />
     </div>
   );
 }
@@ -684,6 +706,7 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAddTask = async () => {
     if (!newTaskTitle.trim() || isCreating) return;
@@ -712,6 +735,28 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
     }
   };
 
+  const handleDeleteList = async () => {
+    if (!confirm(`Are you sure you want to archive the list "${list.name}"?`)) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/boards/${boardId}/lists/${list.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast.success("List archived");
+      } else {
+        toast.error("Failed to archive list");
+      }
+    } catch (error) {
+      console.error("Error archiving list:", error);
+      toast.error("Failed to archive list");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg p-3 flex flex-col max-h-full shadow-md">
       {/* List Header */}
@@ -733,8 +778,12 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
             <DropdownMenuItem>Copy list</DropdownMenuItem>
             <DropdownMenuItem>Move list</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
-              Archive list
+            <DropdownMenuItem
+              className="text-red-600"
+              onClick={handleDeleteList}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Archiving..." : "Archive list"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -745,7 +794,7 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
         {list.tasks
           .sort((a: any, b: any) => a.position - b.position)
           .map((task: any) => (
-            <TaskCard key={task.id} task={task} />
+            <TaskCard key={task.id} task={task} boardId={boardId} />
           ))}
       </div>
 
@@ -809,8 +858,32 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
   );
 }
 
-function TaskCard({ task }: { task: any }) {
+function TaskCard({ task, boardId }: { task: any; boardId: string }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteTask = async () => {
+    if (!confirm("Are you sure you want to delete this task?")) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(
+        `/api/boards/${boardId}/lists/${task.listId}/tasks/${task.id}`,
+        { method: "DELETE" }
+      );
+
+      if (response.ok) {
+        toast.success("Task deleted");
+        setIsOpen(false);
+      } else {
+        toast.error("Failed to delete task");
+      }
+    } catch (error) {
+      toast.error("Failed to delete task");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <>
@@ -893,9 +966,24 @@ function TaskCard({ task }: { task: any }) {
               <Button variant="outline" size="sm">
                 Edit
               </Button>
-              <Button variant="outline" size="sm" className="text-red-600">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 hover:bg-red-50"
+                onClick={handleDeleteTask}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </>
+                )}
               </Button>
             </div>
           </div>

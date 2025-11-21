@@ -156,7 +156,10 @@ export function emitToOrganization(
 
 // Émettre un événement vers un board
 export function emitToBoard(boardId: string, event: SocketEvent, data: any) {
-  if (!io) return;
+  if (!io) {
+    console.warn("⚠️ Socket.IO not initialized, cannot emit event");
+    return;
+  }
 
   const eventData: SocketEventData = {
     type: event,
@@ -165,8 +168,17 @@ export function emitToBoard(boardId: string, event: SocketEvent, data: any) {
     boardId,
   };
 
+  // Vérifier combien de clients sont dans la room
+  const room = io.sockets.adapter.rooms.get(`board:${boardId}`);
+  const clientCount = room ? room.size : 0;
+  
+  console.log(`📡 Emitting ${event} to board ${boardId} (${clientCount} clients in room)`);
+  
+  if (clientCount === 0) {
+    console.warn(`⚠️ No clients in room board:${boardId}`);
+  }
+
   io.to(`board:${boardId}`).emit(event, eventData);
-  console.log(`📡 Emitted ${event} to board ${boardId}`);
 }
 
 // Émettre un événement vers un utilisateur spécifique
