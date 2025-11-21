@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { useSocket } from "@/hooks/use-socket";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { InlineLoader } from "@/components/ui/modern-loader";
 
 interface Board {
   id: string;
