@@ -229,19 +229,19 @@ export default function DashboardPage() {
         {/* Recent Boards & Organizations */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Recent Boards */}
-          <Card className="border-gray-200">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-black">Recent Boards</CardTitle>
+                <CardTitle className="text-lg font-semibold text-white">Recent Boards</CardTitle>
                 <Link 
                   href="/dashboard/boards"
-                  className="text-xs text-gray-600 hover:text-black transition-colors flex items-center gap-1"
+                  className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1"
                 >
                   View all
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-gray-500">
                 Your most recently updated boards
               </CardDescription>
             </CardHeader>
@@ -250,27 +250,27 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <Skeleton className="h-10 w-10 rounded" />
+                      <Skeleton className="h-10 w-10 rounded bg-white/10" />
                       <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-4 w-32 bg-white/10" />
+                        <Skeleton className="h-3 w-24 bg-white/10" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : recentBoards.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {recentBoards.map((board) => (
                     <Link
                       key={board.id}
                       href={`/dashboard/boards/${board.id}`}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group border border-transparent hover:border-white/10"
                     >
-                      <div className="h-10 w-10 rounded bg-black flex items-center justify-center flex-shrink-0">
-                        <LayoutDashboard className="h-5 w-5 text-white" />
+                      <div className="h-10 w-10 rounded bg-white flex items-center justify-center flex-shrink-0">
+                        <LayoutDashboard className="h-5 w-5 text-black" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-black truncate group-hover:text-gray-700">
+                        <p className="text-sm font-medium text-white truncate">
                           {board.name}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                           <span>{board._count.lists} lists</span>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs border-gray-200 text-gray-600">
+                      <Badge variant="outline" className="text-xs border-white/20 text-gray-400">
                         {board._count.members} {board._count.members === 1 ? 'member' : 'members'}
                       </Badge>
                     </Link>
@@ -287,11 +287,11 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  <LayoutDashboard className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <LayoutDashboard className="h-12 w-12 mx-auto mb-3 text-gray-600" />
                   <p className="text-sm">No boards yet</p>
                   <Link
                     href="/dashboard/boards"
-                    className="text-xs text-black hover:underline mt-2 inline-block"
+                    className="text-xs text-white hover:underline mt-2 inline-block"
                   >
                     Create your first board
                   </Link>
@@ -301,19 +301,19 @@ export default function DashboardPage() {
           </Card>
 
           {/* Organizations */}
-          <Card className="border-gray-200">
+          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-black">Organizations</CardTitle>
+                <CardTitle className="text-lg font-semibold text-white">Organizations</CardTitle>
                 <Link 
                   href="/dashboard/organizations"
-                  className="text-xs text-gray-600 hover:text-black transition-colors flex items-center gap-1"
+                  className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1"
                 >
                   View all
                   <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-gray-500">
                 Teams and workspaces you belong to
               </CardDescription>
             </CardHeader>
@@ -322,29 +322,29 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   {[...Array(3)].map((_, i) => (
                     <div key={i} className="flex items-center gap-3">
-                      <Skeleton className="h-10 w-10 rounded" />
+                      <Skeleton className="h-10 w-10 rounded bg-white/10" />
                       <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-4 w-32 bg-white/10" />
+                        <Skeleton className="h-3 w-24 bg-white/10" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : organizations.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {organizations.map((org) => (
                     <Link
                       key={org.id}
                       href={`/dashboard/organizations/${org.id}`}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group border border-transparent hover:border-white/10"
                     >
-                      <div className="h-10 w-10 rounded bg-black flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-lg">
+                      <div className="h-10 w-10 rounded bg-white flex items-center justify-center flex-shrink-0">
+                        <span className="text-black font-bold text-lg">
                           {org.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-black truncate group-hover:text-gray-700">
+                        <p className="text-sm font-medium text-white truncate">
                           {org.name}
                         </p>
                         <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -358,11 +358,11 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
-                  <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-600" />
                   <p className="text-sm">No organizations yet</p>
                   <Link
                     href="/dashboard/organizations"
-                    className="text-xs text-black hover:underline mt-2 inline-block"
+                    className="text-xs text-white hover:underline mt-2 inline-block"
                   >
                     Create your first organization
                   </Link>
@@ -373,38 +373,38 @@ export default function DashboardPage() {
         </div>
 
         {/* User Profile Card */}
-        <Card className="border-gray-200">
+        <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-lg font-semibold text-black">Profile</CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardTitle className="text-lg font-semibold text-white">Profile</CardTitle>
+            <CardDescription className="text-gray-500">
               Your account information
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16 border-2 border-gray-200">
+              <Avatar className="h-16 w-16 border-2 border-white/20">
                 <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
-                <AvatarFallback className="bg-black text-white text-xl font-bold">
+                <AvatarFallback className="bg-white text-black text-xl font-bold">
                   {session.user.name?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 space-y-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Name</p>
-                  <p className="text-base text-black">{session.user.name || "Not provided"}</p>
+                  <p className="text-sm font-medium text-gray-400">Name</p>
+                  <p className="text-base text-white">{session.user.name || "Not provided"}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Email</p>
-                  <p className="text-base text-black">{session.user.email}</p>
+                  <p className="text-sm font-medium text-gray-400">Email</p>
+                  <p className="text-base text-white">{session.user.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   {session.user.emailVerified ? (
-                    <Badge variant="outline" className="border-black text-black">
+                    <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10">
                       <CheckCircle2 className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="border-gray-300 text-gray-600">
+                    <Badge variant="outline" className="border-white/20 text-gray-400">
                       <Circle className="h-3 w-3 mr-1" />
                       Not verified
                     </Badge>
