@@ -108,10 +108,13 @@ export default function DashboardPage() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-black border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-sm text-gray-600">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center space-y-4">
+          <div className="relative w-12 h-12 mx-auto">
+            <div className="absolute inset-0 border-2 border-white/20 rounded-full"></div>
+            <div className="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-sm text-gray-400">Loading your workspace...</p>
         </div>
       </div>
     );
@@ -122,81 +125,81 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-black">
       <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
         {/* Header */}
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-black">Dashboard</h1>
-          <p className="text-sm text-gray-600">
+          <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
+          <p className="text-sm text-gray-400">
             Welcome back, {session.user.name || "User"}
           </p>
         </div>
 
-        <Separator className="bg-gray-200" />
+        <Separator className="bg-white/10" />
 
         {/* Stats Grid */}
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <Card key={i} className="border-gray-200">
+              <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-sm">
                 <CardHeader className="pb-2">
-                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24 bg-white/10" />
                 </CardHeader>
                 <CardContent>
-                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-8 w-16 bg-white/10" />
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="border-gray-200 hover:border-gray-400 transition-colors">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-600 text-xs font-medium uppercase tracking-wide">
+                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
                     Boards
                   </CardDescription>
-                  <LayoutDashboard className="h-4 w-4 text-gray-400" />
+                  <LayoutDashboard className="h-4 w-4 text-gray-500" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-black">{stats?.totalBoards || 0}</div>
+                <div className="text-3xl font-bold text-white">{stats?.totalBoards || 0}</div>
                 <p className="text-xs text-gray-500 mt-1">
                   Active projects
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-gray-200 hover:border-gray-400 transition-colors">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-600 text-xs font-medium uppercase tracking-wide">
+                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
                     Organizations
                   </CardDescription>
-                  <Building2 className="h-4 w-4 text-gray-400" />
+                  <Building2 className="h-4 w-4 text-gray-500" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-black">{stats?.totalOrganizations || 0}</div>
+                <div className="text-3xl font-bold text-white">{stats?.totalOrganizations || 0}</div>
                 <p className="text-xs text-gray-500 mt-1">
                   Teams you're in
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-gray-200 hover:border-gray-400 transition-colors">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-600 text-xs font-medium uppercase tracking-wide">
+                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
                     Tasks
                   </CardDescription>
-                  <CheckCircle2 className="h-4 w-4 text-gray-400" />
+                  <CheckCircle2 className="h-4 w-4 text-gray-500" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-black">
+                <div className="text-3xl font-bold text-white">
                   {stats?.completedTasks || 0}
-                  <span className="text-lg text-gray-400">/{stats?.totalTasks || 0}</span>
+                  <span className="text-lg text-gray-500">/{stats?.totalTasks || 0}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
                   {stats?.totalTasks ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0}% complete
@@ -204,17 +207,17 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-gray-200 hover:border-gray-400 transition-colors">
+            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-600 text-xs font-medium uppercase tracking-wide">
+                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
                     Activity
                   </CardDescription>
-                  <TrendingUp className="h-4 w-4 text-gray-400" />
+                  <TrendingUp className="h-4 w-4 text-gray-500" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-black">{stats?.recentActivity || 0}</div>
+                <div className="text-3xl font-bold text-white">{stats?.recentActivity || 0}</div>
                 <p className="text-xs text-gray-500 mt-1">
                   Updates today
                 </p>
