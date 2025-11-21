@@ -17,7 +17,6 @@ import {
   ListTodo,
   Settings,
   Users,
-  Calendar,
   Archive,
   Building2,
   Bell,
@@ -106,18 +105,6 @@ const dashboardRoutes: Route[] = [
         icon: <Activity className="size-4" />,
       },
     ],
-  },
-  {
-    id: "calendar",
-    title: "Calendar",
-    icon: <Calendar className="size-4" />,
-    link: "/dashboard/calendar",
-  },
-  {
-    id: "team",
-    title: "Team",
-    icon: <Users className="size-4" />,
-    link: "/dashboard/team",
   },
   {
     id: "organizations",
