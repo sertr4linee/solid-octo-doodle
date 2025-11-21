@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket.IO Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="logs"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const logsDiv = document.getElementById('logs');
+        
+        function log(msg) {
+            console.log(msg);
+            logsDiv.innerHTML += '<div>' + msg + '</div>';
+        }
+        
+        log('🔌 Connecting to http://localhost:3000...');
+        
+        const socket = io('http://localhost:3000', {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+        });
+        
+        socket.on('connect', () => {
+            log('✅ Connected! Socket ID: ' + socket.id);
+            statusDiv.textContent = 'Connected ✅';
+            statusDiv.style.color = 'green';
+        });
+        
+        socket.on('disconnect', (reason) => {
+            log('❌ Disconnected: ' + reason);
+            statusDiv.textContent = 'Disconnected ❌';
+            statusDiv.style.color = 'red';
+        });
+        
+        socket.on('connect_error', (error) => {
+            log('❌ Connection error: ' + error.message);
+            statusDiv.textContent = 'Connection Error ❌';
+            statusDiv.style.color = 'red';
+        });
+    </script>
+</body>
+</html>

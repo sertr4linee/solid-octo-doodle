@@ -19,7 +19,10 @@ export function useSocket(options: UseSocketOptions = {}) {
   const maxReconnectAttempts = 5;
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      console.log('🔌 Socket.IO disabled');
+      return;
+    }
 
     // Récupérer le token d'authentification
     const token = document.cookie
@@ -28,8 +31,9 @@ export function useSocket(options: UseSocketOptions = {}) {
       ?.split("=")[1];
 
     if (!token) {
+      console.warn("⚠️ No authentication token found in cookies");
       setError(new Error("No authentication token found"));
-      return;
+      // Continuer quand même sans token pour tester
     }
 
     // Créer la connexion Socket.IO
@@ -38,9 +42,10 @@ export function useSocket(options: UseSocketOptions = {}) {
       : "http://localhost:3000";
     
     console.log(`🔌 Connecting to Socket.IO server at: ${socketUrl}`);
+    console.log(`🔑 Auth token: ${token ? 'Found ✅' : 'Missing ❌'}`);
     
     const socket = io(socketUrl, {
-      auth: { token },
+      auth: token ? { token } : {},
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionDelay: 1000,

@@ -697,7 +697,6 @@ export default function BoardDetailPage({
       </Dialog>
 
       {/* Socket.IO Debug Panel (dev only) */}
-      <SocketDebug isConnected={isConnected} boardId={boardId} />
     </div>
   );
 }
