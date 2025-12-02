@@ -19,17 +19,48 @@ export async function GET(request: Request) {
     const organizationId = searchParams.get("organizationId");
     const filter = searchParams.get("filter") || "all"; // all, my, shared, archived
 
+    // Get user's organizations
+    const userOrganizations = await prisma.member.findMany({
+      where: { userId: session.user.id },
+      select: { organizationId: true },
+    });
+    const userOrgIds = userOrganizations.map((m) => m.organizationId);
+
     let whereClause: any = {
-      members: {
-        some: {
-          userId: session.user.id,
+      OR: [
+        // Boards where user is explicit member
+        {
+          members: {
+            some: {
+              userId: session.user.id,
+            },
+          },
         },
-      },
+        // Boards in user's organizations with organization visibility
+        {
+          organizationId: { in: userOrgIds },
+          visibility: "organization",
+        },
+      ],
     };
 
     // Filter by organization
     if (organizationId) {
       whereClause.organizationId = organizationId;
+      // Remove OR clause when filtering by specific org
+      delete whereClause.OR;
+      whereClause.OR = [
+        {
+          members: {
+            some: {
+              userId: session.user.id,
+            },
+          },
+        },
+        {
+          visibility: "organization",
+        },
+      ];
     }
 
     // Filter by type
@@ -150,7 +181,7 @@ export async function POST(request: Request) {
         description,
         organizationId,
         createdById: session.user.id,
-        visibility: visibility || "private",
+        visibility: visibility || "organization", // Default to organization visibility
         background,
         createdAt: new Date(),
         updatedAt: new Date(),

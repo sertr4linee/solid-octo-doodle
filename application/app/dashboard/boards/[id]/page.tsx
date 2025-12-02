@@ -111,6 +111,7 @@ export default function BoardDetailPage({
   const [newListName, setNewListName] = useState("");
   const [editingBoardName, setEditingBoardName] = useState(false);
   const [boardName, setBoardName] = useState("");
+  const [boardDescription, setBoardDescription] = useState("");
   const [showActivity, setShowActivity] = useState(false);
 
   // Obtenir le boardId immédiatement
@@ -298,6 +299,7 @@ export default function BoardDetailPage({
         const data = await response.json();
         setBoard(data);
         setBoardName(data.name);
+        setBoardDescription(data.description || "");
       } else {
         toast.error("Failed to load board");
         router.push("/dashboard/boards");
@@ -335,14 +337,17 @@ export default function BoardDetailPage({
       await fetch(`/api/boards/${board.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: boardName }),
+        body: JSON.stringify({ 
+          name: boardName,
+          description: boardDescription 
+        }),
       });
 
-      setBoard({ ...board, name: boardName });
-      setEditingBoardName(false);
-      toast.success("Board name updated");
+      setBoard({ ...board, name: boardName, description: boardDescription });
+      setIsSettingsOpen(false);
+      toast.success("Board updated successfully");
     } catch (error) {
-      toast.error("Failed to update board name");
+      toast.error("Failed to update board");
     }
   };
 
@@ -684,7 +689,8 @@ export default function BoardDetailPage({
             <div className="space-y-2">
               <Label>Description</Label>
               <Textarea
-                value={board.description || ""}
+                value={boardDescription}
+                onChange={(e) => setBoardDescription(e.target.value)}
                 placeholder="What is this board about?"
                 rows={3}
               />

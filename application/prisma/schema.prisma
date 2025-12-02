@@ -153,6 +153,7 @@ model Board {
   members        BoardMember[]
   lists          List[]
   activities     Activity[]
+  labels         Label[]
 
   @@map("board")
 }
@@ -185,21 +186,21 @@ model List {
 }
 
 model Task {
-  id          String     @id
+  id          String      @id
   title       String
   description String?
   listId      String
   position    Int
   assigneeId  String?
   dueDate     DateTime?
-  labels      String? // JSON array of labels
-  archived    Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  list        List       @relation(fields: [listId], references: [id], onDelete: Cascade)
-  assignee    User?      @relation(fields: [assigneeId], references: [id])
+  archived    Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  list        List        @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignee    User?       @relation(fields: [assigneeId], references: [id])
   comments    Comment[]
   activities  Activity[]
+  taskLabels  TaskLabel[]
 
   @@map("task")
 }
@@ -231,4 +232,33 @@ model Activity {
   user        User     @relation(fields: [userId], references: [id])
 
   @@map("activity")
+}
+
+// Labels System
+model Label {
+  id          String      @id
+  name        String
+  description String?
+  color       String // Hex color code
+  boardId     String
+  position    Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  board       Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  taskLabels  TaskLabel[]
+
+  @@unique([boardId, name])
+  @@map("label")
+}
+
+model TaskLabel {
+  id        String   @id
+  taskId    String
+  labelId   String
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label     Label    @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, labelId])
+  @@map("task_label")
 }
