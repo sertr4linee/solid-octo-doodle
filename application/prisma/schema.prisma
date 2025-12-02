@@ -272,3 +272,17 @@ model TaskLabel {
   @@unique([taskId, labelId])
   @@map("task_label")
 }
+
+// Task Reactions System
+model TaskReaction {
+  id        String   @id
+  taskId    String
+  userId    String
+  emoji     String   // Emoji reaction
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, userId, emoji])
+  @@map("task_reaction")
+}
