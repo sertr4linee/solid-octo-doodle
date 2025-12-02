@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { canAccessBoard } from "@/lib/permissions";
 
 // GET - Export labels to JSON
 export async function GET(
@@ -20,14 +21,9 @@ export async function GET(
     const { id: boardId } = await params;
 
     // Check if user has access to board
-    const boardMember = await prisma.boardMember.findFirst({
-      where: {
-        boardId,
-        userId: session.user.id,
-      },
-    });
+    const hasAccess = await canAccessBoard(session.user.id, boardId);
 
-    if (!boardMember) {
+    if (!hasAccess) {
       return NextResponse.json(
         { error: "You don't have access to this board" },
         { status: 403 }

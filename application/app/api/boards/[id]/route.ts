@@ -67,6 +67,17 @@ export async function GET(
                     image: true,
                   },
                 },
+                taskLabels: {
+                  include: {
+                    label: {
+                      select: {
+                        id: true,
+                        name: true,
+                        color: true,
+                      },
+                    },
+                  },
+                },
                 _count: {
                   select: {
                     comments: true,

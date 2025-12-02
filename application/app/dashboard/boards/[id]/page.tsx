@@ -32,6 +32,7 @@ import {
   Loader2,
   ArrowLeft,
   Activity,
+  Tags,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,7 @@ import { useSocket } from "@/hooks/use-socket";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SocketDebug } from "@/components/socket-debug";
+import { LabelManager, LabelBadge, LabelPicker } from "@/components/labels";
 
 interface Board {
   id: string;
@@ -78,6 +80,13 @@ interface Board {
         name: string;
         image?: string;
       };
+      taskLabels?: Array<{
+        label: {
+          id: string;
+          name: string;
+          color: string;
+        };
+      }>;
       _count: {
         comments: number;
       };
@@ -113,6 +122,7 @@ export default function BoardDetailPage({
   const [boardName, setBoardName] = useState("");
   const [boardDescription, setBoardDescription] = useState("");
   const [showActivity, setShowActivity] = useState(false);
+  const [isLabelsOpen, setIsLabelsOpen] = useState(false);
 
   // Obtenir le boardId immédiatement
   useEffect(() => {
@@ -549,6 +559,10 @@ export default function BoardDetailPage({
                 <Activity className="h-4 w-4 mr-2" />
                 {showActivity ? "Hide" : "Show"} Activity
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsLabelsOpen(true)}>
+                <Tags className="h-4 w-4 mr-2" />
+                Manage Labels
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
@@ -589,12 +603,12 @@ export default function BoardDetailPage({
 
             {/* Add List Button */}
             {isAddListOpen ? (
-              <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg p-3">
+              <div className="flex-shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-200">
                 <Input
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
                   placeholder="Enter list name..."
-                  className="mb-2"
+                  className="mb-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAddList();
@@ -605,7 +619,7 @@ export default function BoardDetailPage({
                   }}
                 />
                 <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={handleAddList}>
+                  <Button size="sm" onClick={handleAddList} className="bg-blue-600 hover:bg-blue-700 text-white">
                     Add list
                   </Button>
                   <Button
@@ -615,6 +629,7 @@ export default function BoardDetailPage({
                       setIsAddListOpen(false);
                       setNewListName("");
                     }}
+                    className="hover:bg-gray-100"
                   >
                     Cancel
                   </Button>
@@ -624,7 +639,7 @@ export default function BoardDetailPage({
               <div className="flex-shrink-0 w-72">
                 <Button
                   variant="ghost"
-                  className="w-full h-auto min-h-[100px] bg-white/20 hover:bg-white/30 text-white border-2 border-dashed border-white/40"
+                  className="w-full h-auto min-h-[100px] bg-white/30 hover:bg-white/40 backdrop-blur-sm text-white border-2 border-dashed border-white/50 rounded-xl font-semibold transition-all hover:scale-105"
                   onClick={() => setIsAddListOpen(true)}
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -702,6 +717,21 @@ export default function BoardDetailPage({
         </DialogContent>
       </Dialog>
 
+      {/* Labels Management Dialog */}
+      <Dialog open={isLabelsOpen} onOpenChange={setIsLabelsOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Manage Labels</DialogTitle>
+            <DialogDescription>
+              Create and organize labels for this board
+            </DialogDescription>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[60vh]">
+            <LabelManager boardId={board.id} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Socket.IO Debug Panel (dev only) */}
     </div>
   );
@@ -763,19 +793,19 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
   };
 
   return (
-    <div className="flex-shrink-0 w-72 bg-gray-100 rounded-lg p-3 flex flex-col max-h-full shadow-md">
+    <div className="flex-shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-3 flex flex-col max-h-full shadow-lg border border-gray-200/50">
       {/* List Header */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-gray-900">{list.name}</h3>
-          <Badge variant="secondary" className="text-xs">
+          <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">{list.name}</h3>
+          <Badge variant="secondary" className="text-xs font-semibold px-2 py-0.5 bg-gray-200 text-gray-700">
             {list.tasks.length}
           </Badge>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-gray-200">
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors">
+              <MoreHorizontal className="h-4 w-4 text-gray-600" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -795,7 +825,7 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
       </div>
 
       {/* Tasks */}
-      <div className="flex-1 overflow-y-auto space-y-2 mb-2">
+      <div className="flex-1 overflow-y-auto space-y-2.5 mb-3 pr-1 custom-scrollbar">
         {list.tasks
           .sort((a: any, b: any) => a.position - b.position)
           .map((task: any) => (
@@ -805,13 +835,13 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
 
       {/* Add Task */}
       {isAddingTask ? (
-        <div className="space-y-2">
+        <div className="space-y-2 bg-white rounded-lg p-2 shadow-sm border border-gray-200">
           <Textarea
             value={newTaskTitle}
             onChange={(e) => setNewTaskTitle(e.target.value)}
             placeholder="Enter a title for this card..."
             rows={3}
-            className="resize-none"
+            className="resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500"
             autoFocus
             disabled={isCreating}
             onKeyDown={(e) => {
@@ -893,29 +923,48 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
   return (
     <>
       <Card
-        className="cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all bg-white group"
+        className="cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-200 bg-white group border-l-4 border-l-transparent hover:border-l-blue-500"
         onClick={() => setIsOpen(true)}
       >
-        <CardContent className="p-3 space-y-2">
-          <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+        <CardContent className="p-4 space-y-3">
+          {/* Labels */}
+          {task.taskLabels && task.taskLabels.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {task.taskLabels.slice(0, 4).map((tl: any) => (
+                <LabelBadge
+                  key={tl.label.id}
+                  label={tl.label}
+                  size="sm"
+                  variant="pill"
+                />
+              ))}
+              {task.taskLabels.length > 4 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{task.taskLabels.length - 4}
+                </Badge>
+              )}
+            </div>
+          )}
+          
+          <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-relaxed">
             {task.title}
           </p>
           {task.description && (
-            <p className="text-xs text-gray-600 line-clamp-2">{task.description}</p>
+            <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">{task.description}</p>
           )}
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-3">
               {task.assignee && (
-                <Avatar className="h-6 w-6 border-2 border-white shadow-sm">
+                <Avatar className="h-7 w-7 border-2 border-white shadow-md">
                   <AvatarImage src={task.assignee.image} />
-                  <AvatarFallback className="text-xs bg-gradient-to-br from-blue-500 to-purple-500 text-white">
+                  <AvatarFallback className="text-xs bg-linear-to-br from-blue-500 to-purple-500 text-white font-medium">
                     {task.assignee.name?.charAt(0) || "?"}
                   </AvatarFallback>
                 </Avatar>
               )}
             </div>
             {task._count.comments > 0 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-50 text-blue-700 font-medium">
                 💬 {task._count.comments}
               </Badge>
             )}
@@ -937,6 +986,18 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
           <div className="space-y-6 py-4">
             {/* Task Details */}
             <div className="space-y-4">
+              {/* Labels Section */}
+              <div>
+                <Label className="text-xs text-muted-foreground">Labels</Label>
+                <div className="mt-2">
+                  <LabelPicker
+                    boardId={boardId}
+                    taskId={task.id}
+                    selectedLabels={task.taskLabels?.map((tl: any) => tl.label) || []}
+                  />
+                </div>
+              </div>
+
               <div>
                 <Label className="text-xs text-muted-foreground">Assigned to</Label>
                 {task.assignee ? (

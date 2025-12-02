@@ -143,7 +143,11 @@ model Board {
   organizationId String
   createdById    String
   visibility     String        @default("private") // private, organization, public
-  background     String? // Color or image URL
+  background     String?       // Color or image URL
+  backgroundType String?       @default("color") // color, gradient, image, unsplash
+  backgroundBlur Boolean       @default(false)
+  theme          String?       // Theme preset name
+  darkMode       Boolean       @default(false)
   starred        Boolean       @default(false)
   archived       Boolean       @default(false)
   createdAt      DateTime      @default(now())
@@ -176,6 +180,8 @@ model List {
   name      String
   boardId   String
   position  Int
+  color     String?  // Custom color for list
+  emoji     String?  // Emoji icon for list
   archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -186,21 +192,25 @@ model List {
 }
 
 model Task {
-  id          String      @id
+  id          String         @id
   title       String
   description String?
   listId      String
   position    Int
   assigneeId  String?
   dueDate     DateTime?
-  archived    Boolean     @default(false)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  list        List        @relation(fields: [listId], references: [id], onDelete: Cascade)
-  assignee    User?       @relation(fields: [assigneeId], references: [id])
+  coverImage  String?        // Cover image URL
+  coverColor  String?        // Cover color
+  emoji       String?        // Emoji icon for task
+  archived    Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  list        List           @relation(fields: [listId], references: [id], onDelete: Cascade)
+  assignee    User?          @relation(fields: [assigneeId], references: [id])
   comments    Comment[]
   activities  Activity[]
   taskLabels  TaskLabel[]
+  reactions   TaskReaction[]
 
   @@map("task")
 }

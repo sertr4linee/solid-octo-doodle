@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { emitToBoard } from "@/lib/socket";
+import { canAccessBoard } from "@/lib/permissions";
 
 // PATCH - Update list
 export async function PATCH(
@@ -21,17 +22,12 @@ export async function PATCH(
     const { id: boardId, listId } = await params;
     const body = await request.json();
 
-    // Check if user is member of board
-    const member = await prisma.boardMember.findFirst({
-      where: {
-        boardId,
-        userId: session.user.id,
-      },
-    });
+    // Check if user has access to board
+    const hasAccess = await canAccessBoard(session.user.id, boardId);
 
-    if (!member) {
+    if (!hasAccess) {
       return NextResponse.json(
-        { error: "You must be a member of the board" },
+        { error: "You don't have access to this board" },
         { status: 403 }
       );
     }
@@ -91,17 +87,12 @@ export async function DELETE(
 
     const { id: boardId, listId } = await params;
 
-    // Check if user is member of board
-    const member = await prisma.boardMember.findFirst({
-      where: {
-        boardId,
-        userId: session.user.id,
-      },
-    });
+    // Check if user has access to board
+    const hasAccess = await canAccessBoard(session.user.id, boardId);
 
-    if (!member) {
+    if (!hasAccess) {
       return NextResponse.json(
-        { error: "You must be a member of the board" },
+        { error: "You don't have access to this board" },
         { status: 403 }
       );
     }

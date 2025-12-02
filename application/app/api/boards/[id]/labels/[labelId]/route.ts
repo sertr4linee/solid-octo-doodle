@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { emitToBoard } from "@/lib/socket";
+import { canAccessBoard } from "@/lib/permissions";
 
 // GET - Get a specific label
 export async function GET(
@@ -21,14 +22,9 @@ export async function GET(
     const { id: boardId, labelId } = await params;
 
     // Check if user has access to board
-    const boardMember = await prisma.boardMember.findFirst({
-      where: {
-        boardId,
-        userId: session.user.id,
-      },
-    });
+    const hasAccess = await canAccessBoard(session.user.id, boardId);
 
-    if (!boardMember) {
+    if (!hasAccess) {
       return NextResponse.json(
         { error: "You don't have access to this board" },
         { status: 403 }
@@ -79,16 +75,10 @@ export async function PATCH(
 
     const { id: boardId, labelId } = await params;
 
-    // Check if user has admin or owner access
-    const boardMember = await prisma.boardMember.findFirst({
-      where: {
-        boardId,
-        userId: session.user.id,
-        role: { in: ["owner", "admin"] },
-      },
-    });
+    // Check if user has access to board
+    const hasAccess = await canAccessBoard(session.user.id, boardId);
 
-    if (!boardMember) {
+    if (!hasAccess) {
       return NextResponse.json(
         { error: "You don't have permission to update labels" },
         { status: 403 }
@@ -184,16 +174,10 @@ export async function DELETE(
 
     const { id: boardId, labelId } = await params;
 
-    // Check if user has admin or owner access
-    const boardMember = await prisma.boardMember.findFirst({
-      where: {
-        boardId,
-        userId: session.user.id,
-        role: { in: ["owner", "admin"] },
-      },
-    });
+    // Check if user has access to board
+    const hasAccess = await canAccessBoard(session.user.id, boardId);
 
-    if (!boardMember) {
+    if (!hasAccess) {
       return NextResponse.json(
         { error: "You don't have permission to delete labels" },
         { status: 403 }

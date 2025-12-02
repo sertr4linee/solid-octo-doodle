@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { emitToBoard } from "@/lib/socket";
+import { canAccessBoard } from "@/lib/permissions";
 
 // POST - Add a label to a task
 export async function POST(
@@ -35,22 +36,25 @@ export async function POST(
       include: {
         list: {
           include: {
-            board: {
-              include: {
-                members: {
-                  where: { userId: session.user.id },
-                },
-              },
-            },
+            board: true,
           },
         },
       },
     });
 
-    if (!task || task.list.board.members.length === 0) {
+    if (!task) {
       return NextResponse.json(
-        { error: "Task not found or no access" },
+        { error: "Task not found" },
         { status: 404 }
+      );
+    }
+
+    // Check board access
+    const hasAccess = await canAccessBoard(session.user.id, task.list.board.id);
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: "No access to this board" },
+        { status: 403 }
       );
     }
 
@@ -151,22 +155,25 @@ export async function GET(
       include: {
         list: {
           include: {
-            board: {
-              include: {
-                members: {
-                  where: { userId: session.user.id },
-                },
-              },
-            },
+            board: true,
           },
         },
       },
     });
 
-    if (!task || task.list.board.members.length === 0) {
+    if (!task) {
       return NextResponse.json(
-        { error: "Task not found or no access" },
+        { error: "Task not found" },
         { status: 404 }
+      );
+    }
+
+    // Check board access
+    const hasAccess = await canAccessBoard(session.user.id, task.list.board.id);
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: "No access to this board" },
+        { status: 403 }
       );
     }
 

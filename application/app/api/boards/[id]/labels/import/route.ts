@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
+import { canAccessBoard } from "@/lib/permissions";
 
 // POST - Import labels from JSON
 export async function POST(
@@ -19,16 +20,10 @@ export async function POST(
 
     const { id: boardId } = await params;
 
-    // Check if user has admin or owner access
-    const boardMember = await prisma.boardMember.findFirst({
-      where: {
-        boardId,
-        userId: session.user.id,
-        role: { in: ["owner", "admin"] },
-      },
-    });
+    // Check if user has access to board
+    const hasAccess = await canAccessBoard(session.user.id, boardId);
 
-    if (!boardMember) {
+    if (!hasAccess) {
       return NextResponse.json(
         { error: "You don't have permission to import labels" },
         { status: 403 }
