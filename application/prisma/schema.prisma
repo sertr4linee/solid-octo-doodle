@@ -8,9 +8,9 @@ datasource db {
 }
 
 model User {
-  id            String        @id
+  id            String         @id
   name          String
-  email         String        @unique
+  email         String         @unique
   emailVerified Boolean
   image         String?
   createdAt     DateTime
@@ -24,6 +24,7 @@ model User {
   tasks         Task[]
   comments      Comment[]
   activities    Activity[]
+  reactions     TaskReaction[]
 
   @@map("user")
 }
