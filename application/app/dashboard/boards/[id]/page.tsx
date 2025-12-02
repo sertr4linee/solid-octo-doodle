@@ -33,6 +33,8 @@ import {
   ArrowLeft,
   Activity,
   Tags,
+  Palette,
+  Image as ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -42,12 +44,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SocketDebug } from "@/components/socket-debug";
 import { LabelManager, LabelBadge, LabelPicker } from "@/components/labels";
+import { BackgroundPicker, ThemePicker, EmojiPicker } from "@/components/customization";
+import type { BackgroundOption, ThemePreset } from "@/lib/types/customization";
 
 interface Board {
   id: string;
   name: string;
   description?: string;
   background?: string;
+  backgroundType?: string;
+  backgroundBlur?: boolean;
+  theme?: string;
+  darkMode?: boolean;
   starred: boolean;
   archived: boolean;
   visibility: string;
@@ -123,6 +131,8 @@ export default function BoardDetailPage({
   const [boardDescription, setBoardDescription] = useState("");
   const [showActivity, setShowActivity] = useState(false);
   const [isLabelsOpen, setIsLabelsOpen] = useState(false);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [customizeTab, setCustomizeTab] = useState("background");
 
   // Obtenir le boardId immédiatement
   useEffect(() => {
@@ -397,6 +407,60 @@ export default function BoardDetailPage({
     }
   };
 
+  const handleBackgroundChange = async (background: BackgroundOption) => {
+    if (!board) return;
+
+    try {
+      const response = await fetch(`/api/boards/${board.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          background: background.value,
+          backgroundType: background.type,
+          backgroundBlur: background.blur,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedBoard = await response.json();
+        setBoard(updatedBoard);
+        toast.success("Background updated");
+      } else {
+        toast.error("Failed to update background");
+      }
+    } catch (error) {
+      toast.error("Failed to update background");
+    }
+  };
+
+  const handleThemeChange = async (theme: ThemePreset) => {
+    if (!board) return;
+
+    try {
+      const response = await fetch(`/api/boards/${board.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          theme: theme.id,
+          background: theme.background.value,
+          backgroundType: theme.background.type,
+          backgroundBlur: theme.background.blur,
+          darkMode: theme.darkMode,
+        }),
+      });
+
+      if (response.ok) {
+        const updatedBoard = await response.json();
+        setBoard(updatedBoard);
+        toast.success(`${theme.name} theme applied`);
+      } else {
+        toast.error("Failed to apply theme");
+      }
+    } catch (error) {
+      toast.error("Failed to apply theme");
+    }
+  };
+
   const handleAddList = async () => {
     if (!board || !newListName.trim()) return;
 
@@ -435,14 +499,32 @@ export default function BoardDetailPage({
     return null;
   }
 
+  // Determine background style
+  const getBackgroundStyle = () => {
+    if (!board.background) {
+      return { background: "#0079BF" };
+    }
+
+    const baseStyle: React.CSSProperties = {};
+    
+    if (board.backgroundType === "image" || board.backgroundType === "unsplash") {
+      baseStyle.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url(${board.background})`;
+      baseStyle.backgroundSize = "cover";
+      baseStyle.backgroundPosition = "center";
+      baseStyle.backgroundRepeat = "no-repeat";
+    } else if (board.backgroundType === "gradient") {
+      baseStyle.background = board.background;
+    } else {
+      baseStyle.backgroundColor = board.background;
+    }
+
+    return baseStyle;
+  };
+
   return (
     <div
-      className="h-screen flex flex-col"
-      style={{
-        background: board.background
-          ? `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), ${board.background}`
-          : "#0079BF",
-      }}
+      className={`h-screen flex flex-col ${board.backgroundBlur ? "backdrop-blur-sm" : ""}`}
+      style={getBackgroundStyle()}
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-black/20 backdrop-blur-sm">
@@ -563,6 +645,10 @@ export default function BoardDetailPage({
                 <Tags className="h-4 w-4 mr-2" />
                 Manage Labels
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsCustomizeOpen(true)}>
+                <Palette className="h-4 w-4 mr-2" />
+                Customize
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
@@ -603,7 +689,7 @@ export default function BoardDetailPage({
 
             {/* Add List Button */}
             {isAddListOpen ? (
-              <div className="flex-shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-200">
+              <div className="shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-200">
                 <Input
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
@@ -636,7 +722,7 @@ export default function BoardDetailPage({
                 </div>
               </div>
             ) : (
-              <div className="flex-shrink-0 w-72">
+              <div className="shrink-0 w-72">
                 <Button
                   variant="ghost"
                   className="w-full h-auto min-h-[100px] bg-white/30 hover:bg-white/40 backdrop-blur-sm text-white border-2 border-dashed border-white/50 rounded-xl font-semibold transition-all hover:scale-105"
@@ -660,7 +746,7 @@ export default function BoardDetailPage({
             <div className="space-y-3">
               {board.activities.slice(0, 20).map((activity) => (
                 <div key={activity.id} className="flex gap-3 text-sm">
-                  <Avatar className="h-8 w-8 flex-shrink-0">
+                  <Avatar className="h-8 w-8 shrink-0">
                     <AvatarImage src={activity.user.image} />
                     <AvatarFallback className="text-xs">
                       {activity.user.name?.charAt(0) || "?"}
@@ -732,6 +818,55 @@ export default function BoardDetailPage({
         </DialogContent>
       </Dialog>
 
+      {/* Customization Dialog */}
+      <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              Customize Board
+            </DialogTitle>
+            <DialogDescription>
+              Personalize your board with backgrounds, themes, and colors
+            </DialogDescription>
+          </DialogHeader>
+          <Tabs value={customizeTab} onValueChange={setCustomizeTab}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="background">
+                <ImageIcon className="h-4 w-4 mr-2" />
+                Background
+              </TabsTrigger>
+              <TabsTrigger value="theme">
+                <Palette className="h-4 w-4 mr-2" />
+                Themes
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="background" className="overflow-y-auto max-h-[55vh] mt-4">
+              <BackgroundPicker
+                currentBackground={
+                  board.background
+                    ? {
+                        type: (board.backgroundType as any) || "color",
+                        value: board.background,
+                        blur: board.backgroundBlur,
+                      }
+                    : undefined
+                }
+                onSelect={handleBackgroundChange}
+              />
+            </TabsContent>
+            
+            <TabsContent value="theme" className="overflow-y-auto max-h-[55vh] mt-4">
+              <ThemePicker
+                currentTheme={board.theme}
+                onSelect={handleThemeChange}
+              />
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
       {/* Socket.IO Debug Panel (dev only) */}
     </div>
   );
@@ -793,7 +928,7 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
   };
 
   return (
-    <div className="flex-shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-3 flex flex-col max-h-full shadow-lg border border-gray-200/50">
+    <div className="shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-3 flex flex-col max-h-full shadow-lg border border-gray-200/50">
       {/* List Header */}
       <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
         <div className="flex items-center gap-2">
