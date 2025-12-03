@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useSocket } from "@/hooks/use-socket";
 
 interface Reaction {
   emoji: string;
@@ -31,10 +32,38 @@ interface TaskReactionsProps {
 export function TaskReactions({ taskId, boardId, variant = "compact", className }: TaskReactionsProps) {
   const [reactions, setReactions] = useState<Reaction[]>([]);
   const [loading, setLoading] = useState(false);
+  const { isConnected, on, off } = useSocket({
+    boardId,
+    enabled: true,
+  });
 
   useEffect(() => {
     loadReactions();
   }, [taskId]);
+
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const handleReactionAdded = (data: any) => {
+      if (data.taskId === taskId) {
+        loadReactions();
+      }
+    };
+
+    const handleReactionRemoved = (data: any) => {
+      if (data.taskId === taskId) {
+        loadReactions();
+      }
+    };
+
+    on("task:reaction:added", handleReactionAdded);
+    on("task:reaction:removed", handleReactionRemoved);
+
+    return () => {
+      off("task:reaction:added", handleReactionAdded);
+      off("task:reaction:removed", handleReactionRemoved);
+    };
+  }, [isConnected, taskId, on, off]);
 
   const loadReactions = async () => {
     try {

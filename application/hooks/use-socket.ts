@@ -135,7 +135,14 @@ export function useSocket(options: UseSocketOptions = {}) {
       return;
     }
     console.log(`👂 Listening to event: ${event}`);
-    socketRef.current.on(event, callback);
+    
+    // Wrapper pour logger quand l'événement est reçu
+    const wrappedCallback = (data: SocketData<T>) => {
+      console.log(`📥 Event received: ${event}`, data);
+      callback(data);
+    };
+    
+    socketRef.current.on(event, wrappedCallback);
   };
 
   // Fonction pour arrêter d'écouter des événements

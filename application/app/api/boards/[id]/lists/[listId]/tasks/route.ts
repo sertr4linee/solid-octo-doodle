@@ -90,12 +90,16 @@ export async function POST(
     });
 
     // Émettre l'événement Socket.IO
+    console.log("📡 About to emit task:created event for board:", boardId);
     emitToBoard(boardId, "task:created", {
-      boardId,
-      listId,
-      task,
+      data: {
+        boardId,
+        listId,
+        task,
+      },
       userId: session.user.id,
     });
+    console.log("✅ Task:created event emitted successfully");
 
     return NextResponse.json(task, { status: 201 });
   } catch (error) {

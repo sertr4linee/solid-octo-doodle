@@ -136,9 +136,13 @@ export default function BoardDetailPage({
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [customizeTab, setCustomizeTab] = useState("background");
 
-  // Obtenir le boardId immédiatement
+  // Obtenir le boardId immédiatement de manière synchrone
+  const [resolvedBoardId, setResolvedBoardId] = useState<string>("");
+  
   useEffect(() => {
     params.then((p) => {
+      console.log("🎯 Board ID resolved:", p.id);
+      setResolvedBoardId(p.id);
       setBoardId(p.id);
       loadBoard(p.id);
     });
@@ -146,12 +150,17 @@ export default function BoardDetailPage({
 
   // Socket.IO connection - se connecte dès que boardId est disponible
   const { isConnected, on, off } = useSocket({
-    boardId: boardId || undefined,
-    enabled: !!boardId,
+    boardId: resolvedBoardId || undefined,
+    enabled: !!resolvedBoardId,
   });
 
   useEffect(() => {
-    if (!isConnected || !boardId) return;
+    if (!isConnected || !resolvedBoardId) {
+      console.log("❌ Socket not ready - isConnected:", isConnected, "boardId:", resolvedBoardId);
+      return;
+    }
+
+    console.log("✅ Setting up Socket.IO listeners for board:", resolvedBoardId);
 
     const handleBoardUpdated = (data: any) => {
       console.log("✏️ Board updated:", data);
@@ -176,7 +185,7 @@ export default function BoardDetailPage({
         };
       });
       // Recharger pour avoir les activités à jour
-      setTimeout(() => loadBoard(boardId), 500);
+      setTimeout(() => loadBoard(resolvedBoardId), 500);
     };
 
     const handleListUpdated = (data: any) => {
@@ -203,14 +212,32 @@ export default function BoardDetailPage({
     };
 
     const handleTaskCreated = (data: any) => {
-      console.log("✅ Task created:", data);
-      toast.success("Task created by " + (data.userId === boardId ? "you" : "another user"));
-      // Mettre à jour l'état local au lieu de recharger
+      console.log("✅ Task created event received:", data);
+      console.log("Current boardId:", resolvedBoardId);
+      console.log("Event boardId:", data.data?.boardId);
+      console.log("Event listId:", data.data?.listId);
+      console.log("Event task:", data.data?.task);
+      
+      // Mettre à jour l'état local sans recharger
       setBoard((prev) => {
-        if (!prev) return prev;
+        if (!prev) {
+          console.log("❌ No board in state");
+          return prev;
+        }
+        
+        console.log("📋 Current lists:", prev.lists.map((l: any) => ({ id: l.id, name: l.name, taskCount: l.tasks.length })));
         
         const updatedLists = prev.lists.map((list) => {
           if (list.id === data.data.listId) {
+            // Vérifier si la tâche existe déjà pour éviter les doublons
+            const taskExists = list.tasks.some((t: any) => t.id === data.data.task.id);
+            console.log(`✅ Found matching list: ${list.name}, task exists: ${taskExists}`);
+            if (taskExists) {
+              console.log("⚠️ Task already exists, skipping");
+              return list;
+            }
+            
+            console.log("🎉 Adding task to list:", list.name, "- Task title:", data.data.task.title);
             return {
               ...list,
               tasks: [...list.tasks, data.data.task],
@@ -219,13 +246,14 @@ export default function BoardDetailPage({
           return list;
         });
 
+        const listsChanged = updatedLists !== prev.lists;
+        console.log("📊 Lists changed:", listsChanged);
+
         return {
           ...prev,
           lists: updatedLists,
         };
       });
-      // Recharger pour avoir les activités à jour
-      setTimeout(() => loadBoard(boardId), 500);
     };
 
     const handleTaskUpdated = (data: any) => {
@@ -258,7 +286,7 @@ export default function BoardDetailPage({
     const handleTaskMoved = (data: any) => {
       console.log("🔄 Task moved:", data);
       // Recharger le board pour avoir les positions correctes
-      loadBoard(boardId);
+      loadBoard(resolvedBoardId);
     };
 
     const handleMemberAdded = (data: any) => {
@@ -293,6 +321,7 @@ export default function BoardDetailPage({
     on("list:updated", handleListUpdated);
     on("list:deleted", handleListDeleted);
     on("task:created", handleTaskCreated);
+    console.log("🎯 Registered listener for task:created event");
     on("task:updated", handleTaskUpdated);
     on("task:deleted", handleTaskDeleted);
     on("task:moved", handleTaskMoved);
@@ -310,7 +339,7 @@ export default function BoardDetailPage({
       off("task:deleted", handleTaskDeleted);
       off("task:moved", handleTaskMoved);
     };
-  }, [isConnected, boardId, on, off, router]);
+  }, [isConnected, resolvedBoardId, on, off, router]);
 
   const loadBoard = async (id: string) => {
     try {
@@ -723,7 +752,7 @@ export default function BoardDetailPage({
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
                   placeholder="Enter list name..."
-                  className="mb-3 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  className="mb-3 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 placeholder-gray-900 text-gray-900"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAddList();

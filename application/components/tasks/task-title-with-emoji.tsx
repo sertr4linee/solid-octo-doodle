@@ -71,7 +71,7 @@ export function TaskTitleWithEmoji({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="flex-1"
+        className="flex-1 placeholder-gray-900 text-gray-900"
         disabled={disabled}
       />
     </div>
