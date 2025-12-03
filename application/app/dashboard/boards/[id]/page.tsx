@@ -46,6 +46,8 @@ import { SocketDebug } from "@/components/socket-debug";
 import { LabelManager, LabelBadge, LabelPicker } from "@/components/labels";
 import { BackgroundPicker, ThemePicker, EmojiPicker } from "@/components/customization";
 import type { BackgroundOption, ThemePreset } from "@/lib/types/customization";
+import { TaskReactions } from "@/components/tasks/task-reactions";
+import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
 
 interface Board {
   id: string;
@@ -422,8 +424,13 @@ export default function BoardDetailPage({
       });
 
       if (response.ok) {
-        const updatedBoard = await response.json();
-        setBoard(updatedBoard);
+        // Ne mettre à jour que les champs de customization
+        setBoard(prev => prev ? {
+          ...prev,
+          background: background.value,
+          backgroundType: background.type,
+          backgroundBlur: background.blur,
+        } : prev);
         toast.success("Background updated");
       } else {
         toast.error("Failed to update background");
@@ -450,8 +457,15 @@ export default function BoardDetailPage({
       });
 
       if (response.ok) {
-        const updatedBoard = await response.json();
-        setBoard(updatedBoard);
+        // Ne mettre à jour que les champs de customization
+        setBoard(prev => prev ? {
+          ...prev,
+          theme: theme.id,
+          background: theme.background.value,
+          backgroundType: theme.background.type,
+          backgroundBlur: theme.background.blur,
+          darkMode: theme.darkMode,
+        } : prev);
         toast.success(`${theme.name} theme applied`);
       } else {
         toast.error("Failed to apply theme");
@@ -533,7 +547,7 @@ export default function BoardDetailPage({
             variant="ghost"
             size="sm"
             onClick={() => router.push("/dashboard/boards")}
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 backdrop-blur-sm border border-white/30"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
@@ -552,13 +566,13 @@ export default function BoardDetailPage({
                     setEditingBoardName(false);
                   }
                 }}
-                className="bg-white/90 text-gray-900 font-semibold text-lg w-64"
+                className="bg-white text-gray-900 font-semibold text-lg w-64 border-2 border-white shadow-lg"
                 autoFocus
               />
             </div>
           ) : (
             <h1
-              className="text-2xl font-bold text-white cursor-pointer hover:bg-white/10 px-3 py-1 rounded"
+              className="text-2xl font-bold text-white cursor-pointer hover:bg-white/20 px-3 py-1.5 rounded-lg transition-all backdrop-blur-sm border border-transparent hover:border-white/30"
               onClick={() => setEditingBoardName(true)}
             >
               {board.name}
@@ -569,7 +583,7 @@ export default function BoardDetailPage({
             variant="ghost"
             size="sm"
             onClick={toggleStar}
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-white/20 backdrop-blur-sm border border-white/30"
           >
             <Star
               className={`h-5 w-5 ${
@@ -578,41 +592,41 @@ export default function BoardDetailPage({
             />
           </Button>
 
-          <Badge variant="secondary" className="bg-white/90">
+          <Badge variant="secondary" className="bg-white text-gray-900 font-semibold border border-white/50 shadow-sm">
             {board.visibility}
           </Badge>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Socket.IO Status Indicator */}
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30">
             <div
               className={`h-2 w-2 rounded-full ${
                 isConnected ? "bg-green-400 animate-pulse" : "bg-red-400"
               }`}
             />
-            <span className="text-xs text-white font-medium">
+            <span className="text-xs text-white font-semibold">
               {isConnected ? "Live" : "Offline"}
             </span>
           </div>
 
           {/* Members Avatars */}
           <div className="flex -space-x-2">
-            {board.members.slice(0, 5).map((member) => (
+            {board.members?.slice(0, 5).map((member) => (
               <Avatar
                 key={member.id}
-                className="h-8 w-8 border-2 border-white"
+                className="h-8 w-8 border-2 border-white shadow-md ring-2 ring-black/10"
                 title={member.user.name}
               >
                 <AvatarImage src={member.user.image} />
-                <AvatarFallback className="text-xs">
+                <AvatarFallback className="text-xs bg-linear-to-br from-blue-500 to-purple-500 text-white font-semibold">
                   {member.user.name?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
             ))}
-            {board.members.length > 5 && (
-              <div className="h-8 w-8 rounded-full border-2 border-white bg-white/90 flex items-center justify-center text-xs font-semibold">
-                +{board.members.length - 5}
+            {(board.members?.length || 0) > 5 && (
+              <div className="h-8 w-8 rounded-full border-2 border-white bg-white shadow-md ring-2 ring-black/10 flex items-center justify-center text-xs font-bold text-gray-700">
+                +{(board.members?.length || 0) - 5}
               </div>
             )}
           </div>
@@ -620,7 +634,7 @@ export default function BoardDetailPage({
           <Button
             variant="ghost"
             size="sm"
-            className="text-white bg-white/10 hover:bg-white/20"
+            className="text-white bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 font-semibold"
           >
             <Users className="h-4 w-4 mr-2" />
             Invite
@@ -631,42 +645,57 @@ export default function BoardDetailPage({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 backdrop-blur-sm border border-white/30"
               >
                 <MoreHorizontal className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => setShowActivity(!showActivity)}>
-                <Activity className="h-4 w-4 mr-2" />
-                {showActivity ? "Hide" : "Show"} Activity
+            <DropdownMenuContent align="end" className="w-56 bg-white shadow-xl border-2 border-gray-200">
+              <DropdownMenuItem 
+                onClick={() => setShowActivity(!showActivity)}
+                className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-900"
+              >
+                <Activity className="h-4 w-4 mr-2 text-blue-600" />
+                <span className="font-semibold text-gray-900">{showActivity ? "Hide" : "Show"} Activity</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsLabelsOpen(true)}>
-                <Tags className="h-4 w-4 mr-2" />
-                Manage Labels
+              <DropdownMenuItem 
+                onClick={() => setIsLabelsOpen(true)}
+                className="cursor-pointer hover:bg-purple-50 focus:bg-purple-50 text-gray-900"
+              >
+                <Tags className="h-4 w-4 mr-2 text-purple-600" />
+                <span className="font-semibold text-gray-900">Manage Labels</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsCustomizeOpen(true)}>
-                <Palette className="h-4 w-4 mr-2" />
-                Customize
+              <DropdownMenuItem 
+                onClick={() => setIsCustomizeOpen(true)}
+                className="cursor-pointer hover:bg-pink-50 focus:bg-pink-50 text-gray-900"
+              >
+                <Palette className="h-4 w-4 mr-2 text-pink-600" />
+                <span className="font-semibold text-gray-900">Customize</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
+              <DropdownMenuItem 
+                onClick={() => setIsSettingsOpen(true)}
+                className="cursor-pointer hover:bg-gray-50 focus:bg-gray-50 text-gray-900"
+              >
+                <Settings className="h-4 w-4 mr-2 text-gray-600" />
+                <span className="font-semibold text-gray-900">Settings</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleArchiveBoard}>
-                <Archive className="h-4 w-4 mr-2" />
-                Archive Board
+              <DropdownMenuItem 
+                onClick={handleArchiveBoard}
+                className="cursor-pointer hover:bg-orange-50 focus:bg-orange-50 text-gray-900"
+              >
+                <Archive className="h-4 w-4 mr-2 text-orange-600" />
+                <span className="font-semibold text-gray-900">Archive Board</span>
               </DropdownMenuItem>
               {board.userRole === "owner" && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleDeleteBoard}
-                    className="text-red-600"
+                    className="cursor-pointer hover:bg-red-50 focus:bg-red-50"
                   >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Board
+                    <Trash2 className="h-4 w-4 mr-2 text-red-600" />
+                    <span className="font-semibold text-red-600">Delete Board</span>
                   </DropdownMenuItem>
                 </>
               )}
@@ -682,19 +711,19 @@ export default function BoardDetailPage({
           <div className="flex gap-4 h-full">
             {/* Lists */}
             {board.lists
-              .sort((a, b) => a.position - b.position)
+              ?.sort((a, b) => a.position - b.position)
               .map((list) => (
                 <ListColumn key={list.id} list={list} boardId={board.id} />
               ))}
 
             {/* Add List Button */}
             {isAddListOpen ? (
-              <div className="shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-gray-200">
+              <div className="shrink-0 w-72 bg-white rounded-xl p-4 shadow-xl border-2 border-gray-200">
                 <Input
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
                   placeholder="Enter list name..."
-                  className="mb-3 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                  className="mb-3 border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                   autoFocus
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleAddList();
@@ -705,7 +734,7 @@ export default function BoardDetailPage({
                   }}
                 />
                 <div className="flex items-center gap-2">
-                  <Button size="sm" onClick={handleAddList} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Button size="sm" onClick={handleAddList} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md">
                     Add list
                   </Button>
                   <Button
@@ -715,7 +744,7 @@ export default function BoardDetailPage({
                       setIsAddListOpen(false);
                       setNewListName("");
                     }}
-                    className="hover:bg-gray-100"
+                    className="hover:bg-gray-100 text-gray-700 font-medium"
                   >
                     Cancel
                   </Button>
@@ -725,7 +754,7 @@ export default function BoardDetailPage({
               <div className="shrink-0 w-72">
                 <Button
                   variant="ghost"
-                  className="w-full h-auto min-h-[100px] bg-white/30 hover:bg-white/40 backdrop-blur-sm text-white border-2 border-dashed border-white/50 rounded-xl font-semibold transition-all hover:scale-105"
+                  className="w-full h-auto min-h-[100px] bg-white/30 hover:bg-white/50 backdrop-blur-md text-white border-2 border-dashed border-white/60 hover:border-white/80 rounded-xl font-bold transition-all hover:scale-105 shadow-lg hover:shadow-xl"
                   onClick={() => setIsAddListOpen(true)}
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -875,6 +904,7 @@ export default function BoardDetailPage({
 function ListColumn({ list, boardId }: { list: any; boardId: string }) {
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskEmoji, setNewTaskEmoji] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -886,12 +916,16 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
       const response = await fetch(`/api/boards/${boardId}/lists/${list.id}/tasks`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: newTaskTitle }),
+        body: JSON.stringify({ 
+          title: newTaskTitle,
+          emoji: newTaskEmoji,
+        }),
       });
 
       if (response.ok) {
         toast.success("Task created");
         setNewTaskTitle("");
+        setNewTaskEmoji(null);
         setIsAddingTask(false);
         // Socket.IO event will update the board automatically
       } else {
@@ -928,32 +962,40 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
   };
 
   return (
-    <div className="shrink-0 w-72 bg-white/90 backdrop-blur-sm rounded-xl p-3 flex flex-col max-h-full shadow-lg border border-gray-200/50">
+    <div className="shrink-0 w-72 bg-white rounded-xl p-3 flex flex-col max-h-full shadow-xl border-2 border-gray-200">
       {/* List Header */}
-      <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+      <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-gray-200">
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide">{list.name}</h3>
-          <Badge variant="secondary" className="text-xs font-semibold px-2 py-0.5 bg-gray-200 text-gray-700">
+          <Badge variant="secondary" className="text-xs font-bold px-2 py-0.5 bg-blue-100 text-blue-700 border border-blue-200">
             {list.tasks.length}
           </Badge>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-100 rounded-md transition-colors">
-              <MoreHorizontal className="h-4 w-4 text-gray-600" />
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-200 rounded-md transition-colors">
+              <MoreHorizontal className="h-4 w-4 text-gray-700" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem>Add card</DropdownMenuItem>
-            <DropdownMenuItem>Copy list</DropdownMenuItem>
-            <DropdownMenuItem>Move list</DropdownMenuItem>
+          <DropdownMenuContent align="end" className="bg-white shadow-xl border-2 border-gray-200">
+            <DropdownMenuItem className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-900">
+              <Plus className="h-4 w-4 mr-2 text-blue-600" />
+              <span className="font-semibold text-gray-900">Add card</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer hover:bg-purple-50 focus:bg-purple-50 text-gray-900">
+              <span className="font-semibold text-gray-900">Copy list</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer hover:bg-green-50 focus:bg-green-50 text-gray-900">
+              <span className="font-semibold text-gray-900">Move list</span>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-red-600"
+              className="cursor-pointer hover:bg-red-50 focus:bg-red-50"
               onClick={handleDeleteList}
               disabled={isDeleting}
             >
-              {isDeleting ? "Archiving..." : "Archive list"}
+              <Archive className="h-4 w-4 mr-2 text-red-600" />
+              <span className="font-semibold text-red-600">{isDeleting ? "Archiving..." : "Archive list"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -970,28 +1012,17 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
 
       {/* Add Task */}
       {isAddingTask ? (
-        <div className="space-y-2 bg-white rounded-lg p-2 shadow-sm border border-gray-200">
-          <Textarea
+        <div className="space-y-2 bg-white rounded-lg p-3 shadow-md border-2 border-gray-200">
+          <TaskTitleWithEmoji
             value={newTaskTitle}
-            onChange={(e) => setNewTaskTitle(e.target.value)}
+            emoji={newTaskEmoji || undefined}
+            onChange={setNewTaskTitle}
+            onEmojiChange={setNewTaskEmoji}
             placeholder="Enter a title for this card..."
-            rows={3}
-            className="resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-            autoFocus
             disabled={isCreating}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleAddTask();
-              }
-              if (e.key === "Escape" && !isCreating) {
-                setIsAddingTask(false);
-                setNewTaskTitle("");
-              }
-            }}
           />
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={handleAddTask} disabled={isCreating}>
+            <Button size="sm" onClick={handleAddTask} disabled={isCreating} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm">
               {isCreating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -1008,7 +1039,9 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
               onClick={() => {
                 setIsAddingTask(false);
                 setNewTaskTitle("");
+                setNewTaskEmoji(null);
               }}
+              className="hover:bg-gray-100 text-gray-700 font-medium"
             >
               Cancel
             </Button>
@@ -1017,7 +1050,7 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
       ) : (
         <Button
           variant="ghost"
-          className="justify-start text-gray-600 hover:bg-gray-200"
+          className="justify-start text-gray-700 hover:bg-gray-200 font-semibold border border-gray-200 hover:border-gray-300"
           onClick={() => setIsAddingTask(true)}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -1058,7 +1091,7 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
   return (
     <>
       <Card
-        className="cursor-pointer hover:shadow-xl hover:scale-[1.02] transition-all duration-200 bg-white group border-l-4 border-l-transparent hover:border-l-blue-500"
+        className="cursor-pointer hover:shadow-2xl hover:scale-[1.02] transition-all duration-200 bg-white group border-2 border-gray-200 hover:border-blue-400"
         onClick={() => setIsOpen(true)}
       >
         <CardContent className="p-4 space-y-3">
@@ -1074,32 +1107,46 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
                 />
               ))}
               {task.taskLabels.length > 4 && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs bg-gray-200 text-gray-700 font-semibold">
                   +{task.taskLabels.length - 4}
                 </Badge>
               )}
             </div>
           )}
           
-          <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-600 transition-colors leading-relaxed">
-            {task.title}
-          </p>
+          {/* Title with emoji */}
+          <div className="flex items-center gap-2">
+            {task.emoji && (
+              <span className="text-xl leading-none shrink-0">{task.emoji}</span>
+            )}
+            <p className="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors leading-relaxed">
+              {task.title}
+            </p>
+          </div>
+          
           {task.description && (
             <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">{task.description}</p>
           )}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          
+          {/* Reactions */}
+          <TaskReactions
+            taskId={task.id}
+            boardId={boardId}
+            variant="compact"
+          />
+          <div className="flex items-center justify-between pt-2 border-t-2 border-gray-200">
             <div className="flex items-center gap-3">
               {task.assignee && (
-                <Avatar className="h-7 w-7 border-2 border-white shadow-md">
+                <Avatar className="h-7 w-7 border-2 border-blue-200 shadow-md ring-2 ring-blue-50">
                   <AvatarImage src={task.assignee.image} />
-                  <AvatarFallback className="text-xs bg-linear-to-br from-blue-500 to-purple-500 text-white font-medium">
+                  <AvatarFallback className="text-xs bg-linear-to-br from-blue-500 to-purple-500 text-white font-semibold">
                     {task.assignee.name?.charAt(0) || "?"}
                   </AvatarFallback>
                 </Avatar>
               )}
             </div>
             {task._count.comments > 0 && (
-              <Badge variant="secondary" className="text-xs px-2 py-1 bg-blue-50 text-blue-700 font-medium">
+              <Badge variant="secondary" className="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 font-bold border border-blue-200">
                 💬 {task._count.comments}
               </Badge>
             )}
@@ -1111,7 +1158,10 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">{task.title}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-2xl">
+              {task.emoji && <span>{task.emoji}</span>}
+              {task.title}
+            </DialogTitle>
             {task.description && (
               <DialogDescription className="text-base mt-2">
                 {task.description}
@@ -1121,6 +1171,16 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
           <div className="space-y-6 py-4">
             {/* Task Details */}
             <div className="space-y-4">
+              {/* Reactions Section */}
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Reactions</Label>
+                <TaskReactions
+                  taskId={task.id}
+                  boardId={boardId}
+                  variant="full"
+                />
+              </div>
+
               {/* Labels Section */}
               <div>
                 <Label className="text-xs text-muted-foreground">Labels</Label>
@@ -1159,18 +1219,18 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button variant="outline" size="sm" className="border-2 border-blue-200 hover:bg-blue-50 text-blue-700 font-semibold">
                 <Users className="h-4 w-4 mr-2" />
                 Assign
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="border-2 border-purple-200 hover:bg-purple-50 text-purple-700 font-semibold">
                 Edit
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="text-red-600 hover:bg-red-50"
+                className="text-red-600 hover:bg-red-50 border-2 border-red-200 font-semibold"
                 onClick={handleDeleteTask}
                 disabled={isDeleting}
               >
