@@ -68,53 +68,79 @@ export function initializeSocket(httpServer: HTTPServer) {
       credentials: true,
     },
     transports: ["websocket", "polling"],
+    pingInterval: 25000,
+    pingTimeout: 60000,
+    connectTimeout: 45000,
+  });
+
+  // Middleware d'authentification
+  io.use(async (socket, next) => {
+    const token = socket.handshake.auth.token;
+    
+    if (!token) {
+      console.warn(`⚠️ No auth token for socket ${socket.id}`);
+      // Continuer sans auth pour le dev
+      return next();
+    }
+
+    try {
+      const session = await auth.api.getSession({
+        headers: new Headers({
+          cookie: `better-auth.session_token=${token}`,
+        }),
+      });
+
+      if (session?.user) {
+        socket.data.userId = session.user.id;
+        socket.data.userName = session.user.name;
+        console.log(`🔐 User authenticated: ${session.user.name} (${session.user.id})`);
+        next();
+      } else {
+        console.warn(`⚠️ Invalid session for socket ${socket.id}`);
+        next();
+      }
+    } catch (error) {
+      console.error("❌ Auth middleware error:", error);
+      next();
+    }
   });
 
   io.on("connection", async (socket) => {
-    console.log(`✅ Client connected: ${socket.id}`);
-
-    // Authentifier l'utilisateur
-    const token = socket.handshake.auth.token;
-    let userId: string | null = null;
-
-    if (token) {
-      try {
-        // Vérifier le token avec Better Auth
-        const session = await auth.api.getSession({
-          headers: new Headers({
-            cookie: `better-auth.session_token=${token}`,
-          }),
-        });
-
-        if (session?.user) {
-          userId = session.user.id;
-          socket.data.userId = userId;
-          console.log(`🔐 User authenticated: ${userId}`);
-        }
-      } catch (error) {
-        console.error("❌ Auth error:", error);
-      }
-    }
+    const userId = socket.data.userId;
+    const userName = socket.data.userName || "Anonymous";
+    console.log(`✅ Client connected: ${socket.id} - User: ${userName} (${userId || "not authenticated"})`);
 
     // Rejoindre les rooms de l'utilisateur
     socket.on("join:organization", (organizationId: string) => {
-      socket.join(`org:${organizationId}`);
-      console.log(`📍 User ${userId} joined organization: ${organizationId}`);
+      const room = `org:${organizationId}`;
+      socket.join(room);
+      const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+      console.log(`📍 ${userName} joined organization: ${organizationId} (${roomSize} users in room)`);
     });
 
     socket.on("leave:organization", (organizationId: string) => {
-      socket.leave(`org:${organizationId}`);
-      console.log(`📍 User ${userId} left organization: ${organizationId}`);
+      const room = `org:${organizationId}`;
+      socket.leave(room);
+      const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+      console.log(`📍 ${userName} left organization: ${organizationId} (${roomSize} users remaining)`);
     });
 
     socket.on("join:board", (boardId: string) => {
-      socket.join(`board:${boardId}`);
-      console.log(`📋 User ${userId} joined board: ${boardId}`);
+      const room = `board:${boardId}`;
+      // Vérifier si déjà dans la room
+      if (socket.rooms.has(room)) {
+        return;
+      }
+      socket.join(room);
+      const roomSize = io!.sockets.adapter.rooms.get(room)?.size || 0;
+      console.log(`📋 ${userName} joined board: ${boardId} (${roomSize} users in room)`);
     });
 
     socket.on("leave:board", (boardId: string) => {
-      socket.leave(`board:${boardId}`);
-      console.log(`📋 User ${userId} left board: ${boardId}`);
+      const room = `board:${boardId}`;
+      socket.leave(room);
+      const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+      console.log(`📋 ${userName} left board: ${boardId} (${roomSize} users remaining)`);
     });
 
     // Ping/pong pour vérifier la connexion

@@ -287,3 +287,54 @@ model TaskReaction {
   @@unique([taskId, userId, emoji])
   @@map("task_reaction")
 }
+
+// Board Templates System
+model BoardTemplate {
+  id            String         @id
+  name          String
+  description   String?
+  category      String         // sprint, roadmap, calendar, bugtracking, onboarding, event, custom
+  icon          String?        // Emoji or icon name
+  coverImage    String?        // Template cover image
+  isPredefined  Boolean        @default(false)
+  isPublic      Boolean        @default(true)
+  usageCount    Int            @default(0)
+  rating        Float          @default(0)
+  variables     String?        // JSON array of variable placeholders
+  createdById   String?
+  organizationId String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  lists         TemplateList[]
+
+  @@map("board_template")
+}
+
+model TemplateList {
+  id         String         @id
+  name       String
+  position   Int
+  color      String?
+  emoji      String?
+  templateId String
+  template   BoardTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tasks      TemplateTask[]
+
+  @@map("template_list")
+}
+
+model TemplateTask {
+  id          String       @id
+  title       String
+  description String?
+  position    Int
+  emoji       String?
+  coverColor  String?
+  coverImage  String?
+  labels      String?      // JSON array of label names
+  variables   String?      // JSON for variable placeholders like {{assignee}}, {{date}}
+  listId      String
+  list        TemplateList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@map("template_task")
+}

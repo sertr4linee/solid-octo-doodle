@@ -103,3 +103,25 @@ export async function getBoardRole(
     return null;
   }
 }
+
+/**
+ * Check if a user has access to an organization
+ */
+export async function canAccessOrganization(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
+  try {
+    const member = await prisma.member.findFirst({
+      where: {
+        organizationId,
+        userId,
+      },
+    });
+
+    return !!member;
+  } catch (error) {
+    console.error("Error checking organization access:", error);
+    return false;
+  }
+}

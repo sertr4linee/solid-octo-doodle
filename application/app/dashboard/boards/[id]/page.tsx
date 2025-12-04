@@ -212,48 +212,9 @@ export default function BoardDetailPage({
     };
 
     const handleTaskCreated = (data: any) => {
-      console.log("✅ Task created event received:", data);
-      console.log("Current boardId:", resolvedBoardId);
-      console.log("Event boardId:", data.data?.boardId);
-      console.log("Event listId:", data.data?.listId);
-      console.log("Event task:", data.data?.task);
-      
-      // Mettre à jour l'état local sans recharger
-      setBoard((prev) => {
-        if (!prev) {
-          console.log("❌ No board in state");
-          return prev;
-        }
-        
-        console.log("📋 Current lists:", prev.lists.map((l: any) => ({ id: l.id, name: l.name, taskCount: l.tasks.length })));
-        
-        const updatedLists = prev.lists.map((list) => {
-          if (list.id === data.data.listId) {
-            // Vérifier si la tâche existe déjà pour éviter les doublons
-            const taskExists = list.tasks.some((t: any) => t.id === data.data.task.id);
-            console.log(`✅ Found matching list: ${list.name}, task exists: ${taskExists}`);
-            if (taskExists) {
-              console.log("⚠️ Task already exists, skipping");
-              return list;
-            }
-            
-            console.log("🎉 Adding task to list:", list.name, "- Task title:", data.data.task.title);
-            return {
-              ...list,
-              tasks: [...list.tasks, data.data.task],
-            };
-          }
-          return list;
-        });
-
-        const listsChanged = updatedLists !== prev.lists;
-        console.log("📊 Lists changed:", listsChanged);
-
-        return {
-          ...prev,
-          lists: updatedLists,
-        };
-      });
+      console.log("✅ Task created:", data);
+      // Recharger le board pour avoir la nouvelle tâche
+      loadBoard(resolvedBoardId);
     };
 
     const handleTaskUpdated = (data: any) => {
@@ -321,7 +282,6 @@ export default function BoardDetailPage({
     on("list:updated", handleListUpdated);
     on("list:deleted", handleListDeleted);
     on("task:created", handleTaskCreated);
-    console.log("🎯 Registered listener for task:created event");
     on("task:updated", handleTaskUpdated);
     on("task:deleted", handleTaskDeleted);
     on("task:moved", handleTaskMoved);

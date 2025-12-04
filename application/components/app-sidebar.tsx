@@ -20,6 +20,7 @@ import {
   Archive,
   Building2,
   Bell,
+  Store,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import type { Route } from "./layout/nav-main";
@@ -82,6 +83,12 @@ const dashboardRoutes: Route[] = [
         icon: <Archive className="size-4" />,
       },
     ],
+  },
+  {
+    id: "marketplace",
+    title: "Marketplace",
+    icon: <Store className="size-4" />,
+    link: "/dashboard/marketplace",
   },
   {
     id: "tasks",
@@ -159,7 +166,7 @@ export function DashboardSidebar() {
             <span className="text-white font-bold text-lg">E</span>
           </div>
           {!isCollapsed && (
-            <span className="font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+            <span className="font-semibold bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               Epitrello
             </span>
           )}

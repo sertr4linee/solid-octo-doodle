@@ -134,25 +134,13 @@ export function useSocket(options: UseSocketOptions = {}) {
       console.warn(`⚠️ Cannot listen to ${event}: Socket not initialized`);
       return;
     }
-    console.log(`👂 Listening to event: ${event}`);
-    
-    // Wrapper pour logger quand l'événement est reçu
-    const wrappedCallback = (data: SocketData<T>) => {
-      console.log(`📥 Event received: ${event}`, data);
-      callback(data);
-    };
-    
-    socketRef.current.on(event, wrappedCallback);
+    socketRef.current.on(event, callback);
   };
 
   // Fonction pour arrêter d'écouter des événements
   const off = (event: SocketEvent, callback?: (...args: any[]) => void) => {
     if (!socketRef.current) return;
-    if (callback) {
-      socketRef.current.off(event, callback);
-    } else {
-      socketRef.current.off(event);
-    }
+    socketRef.current.off(event, callback);
   };
 
   // Fonction pour émettre des événements
