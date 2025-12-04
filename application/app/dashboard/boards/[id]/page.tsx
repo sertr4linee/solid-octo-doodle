@@ -48,6 +48,10 @@ import { BackgroundPicker, ThemePicker, EmojiPicker } from "@/components/customi
 import type { BackgroundOption, ThemePreset } from "@/lib/types/customization";
 import { TaskReactions } from "@/components/tasks/task-reactions";
 import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
+import { ViewSwitcher } from "@/components/boards/view-switcher";
+import { CalendarView } from "@/components/boards/calendar-view";
+import { TableView } from "@/components/boards/table-view";
+import { GalleryView } from "@/components/boards/gallery-view";
 
 interface Board {
   id: string;
@@ -135,6 +139,7 @@ export default function BoardDetailPage({
   const [isLabelsOpen, setIsLabelsOpen] = useState(false);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [customizeTab, setCustomizeTab] = useState("background");
+  const [currentView, setCurrentView] = useState<"kanban" | "calendar" | "table" | "timeline" | "gallery">("kanban");
 
   // Obtenir le boardId immédiatement de manière synchrone
   const [resolvedBoardId, setResolvedBoardId] = useState<string>("");
@@ -693,21 +698,32 @@ export default function BoardDetailPage({
         </div>
       </div>
 
+      {/* View Switcher */}
+      <div className="px-4 pt-4">
+        <ViewSwitcher 
+          currentView={currentView} 
+          onViewChange={setCurrentView} 
+        />
+      </div>
+
       {/* Board Content */}
       <div className="flex-1 overflow-hidden p-4 flex gap-4">
-        {/* Lists Container */}
-        <div className="flex-1 overflow-x-auto overflow-y-hidden">
-          <div className="flex gap-4 h-full">
-            {/* Lists */}
-            {board.lists
-              ?.sort((a, b) => a.position - b.position)
-              .map((list) => (
-                <ListColumn key={list.id} list={list} boardId={board.id} />
-              ))}
+        {/* Kanban View */}
+        {currentView === "kanban" && (
+          <>
+            {/* Lists Container */}
+            <div className="flex-1 overflow-x-auto overflow-y-hidden">
+              <div className="flex gap-4 h-full">
+                {/* Lists */}
+                {board.lists
+                  ?.sort((a, b) => a.position - b.position)
+                  .map((list) => (
+                    <ListColumn key={list.id} list={list} boardId={board.id} />
+                  ))}
 
-            {/* Add List Button */}
-            {isAddListOpen ? (
-              <div className="shrink-0 w-72 bg-white rounded-xl p-4 shadow-xl border-2 border-gray-200">
+                {/* Add List Button */}
+                {isAddListOpen ? (
+                  <div className="shrink-0 w-72 bg-white rounded-xl p-4 shadow-xl border-2 border-gray-200">
                 <Input
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
@@ -753,6 +769,75 @@ export default function BoardDetailPage({
             )}
           </div>
         </div>
+          </>
+        )}
+
+        {/* Calendar View */}
+        {currentView === "calendar" && (
+          <div className="flex-1 overflow-y-auto">
+            <CalendarView 
+              tasks={board.lists.flatMap(list => 
+                list.tasks.map(task => ({
+                  ...task,
+                  list: { name: list.name, color: list.color, emoji: list.emoji },
+                  dueDate: task.dueDate ? new Date(task.dueDate) : null,
+                }))
+              )}
+              onTaskClick={(taskId) => {
+                // TODO: Open task modal
+                console.log("Open task:", taskId);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Table View */}
+        {currentView === "table" && (
+          <div className="flex-1 overflow-y-auto">
+            <TableView 
+              tasks={board.lists.flatMap(list => 
+                list.tasks.map(task => ({
+                  ...task,
+                  list: { name: list.name, color: list.color, emoji: list.emoji },
+                  dueDate: task.dueDate ? new Date(task.dueDate) : null,
+                }))
+              )}
+              onTaskClick={(taskId) => {
+                // TODO: Open task modal
+                console.log("Open task:", taskId);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Gallery View */}
+        {currentView === "gallery" && (
+          <div className="flex-1 overflow-y-auto">
+            <GalleryView 
+              tasks={board.lists.flatMap(list => 
+                list.tasks.map(task => ({
+                  ...task,
+                  list: { name: list.name, color: list.color, emoji: list.emoji },
+                  dueDate: task.dueDate ? new Date(task.dueDate) : null,
+                }))
+              )}
+              onTaskClick={(taskId) => {
+                // TODO: Open task modal
+                console.log("Open task:", taskId);
+              }}
+            />
+          </div>
+        )}
+
+        {/* Timeline View (placeholder) */}
+        {currentView === "timeline" && (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2">Timeline View</h3>
+              <p>Coming soon...</p>
+            </div>
+          </div>
+        )}
 
         {/* Activity Sidebar */}
         {showActivity && (

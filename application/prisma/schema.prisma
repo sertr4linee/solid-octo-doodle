@@ -151,6 +151,7 @@ model Board {
   darkMode       Boolean       @default(false)
   starred        Boolean       @default(false)
   archived       Boolean       @default(false)
+  defaultView    String        @default("kanban") // kanban, calendar, table, timeline, gallery
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -159,6 +160,7 @@ model Board {
   lists          List[]
   activities     Activity[]
   labels         Label[]
+  views          BoardView[]
 
   @@map("board")
 }
@@ -337,4 +339,20 @@ model TemplateTask {
   list        TemplateList @relation(fields: [listId], references: [id], onDelete: Cascade)
 
   @@map("template_task")
+}
+
+// Board Views System
+model BoardView {
+  id          String   @id
+  boardId     String
+  name        String   // "Board", "Calendar", "Table", "Timeline", "Gallery"
+  type        String   // kanban, calendar, table, timeline, gallery
+  isDefault   Boolean  @default(false)
+  position    Int      @default(0)
+  settings    String?  // JSON with view-specific settings (groupBy, sortBy, filters, etc.)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  board       Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  @@map("board_view")
 }
