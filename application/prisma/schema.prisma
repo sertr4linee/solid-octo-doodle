@@ -356,3 +356,32 @@ model BoardView {
 
   @@map("board_view")
 }
+
+// Search System
+model SavedSearch {
+  id          String   @id
+  userId      String
+  name        String
+  query       String   // Search query
+  filters     String?  // JSON with filters (labels, members, dates, status, etc.)
+  isGlobal    Boolean  @default(false) // Search across all boards or current board
+  isPinned    Boolean  @default(false)
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("saved_search")
+}
+
+model SearchHistory {
+  id          String   @id
+  userId      String
+  query       String
+  filters     String?  // JSON
+  resultCount Int      @default(0)
+  clickedResult String? // ID of clicked result
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("search_history")
+}
