@@ -30,6 +30,7 @@ interface AssignUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   taskId: string;
+  listId: string;
   boardId: string;
   currentAssigneeId?: string;
   onSuccess?: () => void;
@@ -39,6 +40,7 @@ export function AssignUserDialog({
   open,
   onOpenChange,
   taskId,
+  listId,
   boardId,
   currentAssigneeId,
   onSuccess,
@@ -77,13 +79,16 @@ export function AssignUserDialog({
     try {
       setAssigning(true);
 
-      const response = await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          assigneeId: userId,
-        }),
-      });
+      const response = await fetch(
+        `/api/boards/${boardId}/lists/${listId}/tasks/${taskId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            assigneeId: userId,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to assign user");
 

@@ -1347,6 +1347,7 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
         open={isAssignDialogOpen}
         onOpenChange={setIsAssignDialogOpen}
         taskId={task.id}
+        listId={task.listId}
         boardId={boardId}
         currentAssigneeId={task.assignee?.id}
         onSuccess={() => {
