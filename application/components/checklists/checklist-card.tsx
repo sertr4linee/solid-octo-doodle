@@ -48,7 +48,7 @@ export function ChecklistCard({
 
   const checkedItems = checklist.items.reduce((sum, item) => {
     const itemChecked = item.checked ? 1 : 0;
-    const childrenChecked = item.children?.filter(c => c.checked).length || 0;
+    const childrenChecked = item.children?.filter((c: ChecklistItemType) => c.checked).length || 0;
     return sum + itemChecked + childrenChecked;
   }, 0);
 
