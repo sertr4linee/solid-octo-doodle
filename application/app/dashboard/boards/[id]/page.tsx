@@ -49,6 +49,7 @@ import type { BackgroundOption, ThemePreset } from "@/lib/types/customization";
 import { TaskReactions } from "@/components/tasks/task-reactions";
 import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
 import { ViewSwitcher } from "@/components/boards/view-switcher";
+import { ChecklistList } from "@/components/checklists/checklist-list";
 import { CalendarView } from "@/components/boards/calendar-view";
 import { TableView } from "@/components/boards/table-view";
 import { GalleryView } from "@/components/boards/gallery-view";
@@ -1290,6 +1291,12 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
                   <p className="text-sm mt-1">{task._count.comments} comments</p>
                 </div>
               )}
+            </div>
+
+            {/* Checklists Section */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 block">Checklists</Label>
+              <ChecklistList taskId={task.id} boardId={boardId} />
             </div>
 
             {/* Actions */}
