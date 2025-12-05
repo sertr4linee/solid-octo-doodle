@@ -175,7 +175,7 @@ export function ChecklistItemComponent({
             <div className="space-y-1">
               <div
                 className={cn(
-                  "text-sm break-words",
+                  "text-sm wrap-break-word",
                   item.checked && "line-through text-muted-foreground"
                 )}
               >
