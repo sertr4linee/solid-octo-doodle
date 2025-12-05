@@ -92,7 +92,12 @@ export function LabelPicker({
           body: JSON.stringify({ labelId: label.id }),
         });
 
-        if (!response.ok) throw new Error("Failed to add label");
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          const errorMessage = errorData.error || "Failed to add label";
+          console.error("❌ Failed to add label:", errorMessage, "Status:", response.status);
+          throw new Error(errorMessage);
+        }
 
         const newTaskLabel = await response.json();
         onLabelsChange?.([...selectedLabels, newTaskLabel]);

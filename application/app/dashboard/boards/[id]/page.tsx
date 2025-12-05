@@ -1262,7 +1262,7 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
                   <LabelPicker
                     boardId={boardId}
                     taskId={task.id}
-                    selectedLabels={task.taskLabels?.map((tl: any) => tl.label) || []}
+                    selectedLabels={task.taskLabels || []}
                   />
                 </div>
               </div>

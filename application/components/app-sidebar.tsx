@@ -29,6 +29,7 @@ import { NotificationsPopover } from "@/components/layout/nav-notifications";
 import { TeamSwitcher } from "@/components/layout/team-switcher";
 import { useNotificationCount } from "@/hooks/use-notification-count";
 import { Badge } from "@/components/ui/badge";
+import { SearchCommand } from "@/components/search-command";
 
 const sampleNotifications = [
   {
@@ -155,39 +156,55 @@ export function DashboardSidebar() {
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader
         className={cn(
-          "flex md:pt-3.5",
-          isCollapsed
-            ? "flex-row items-center justify-between gap-y-4 md:flex-col md:items-start md:justify-start"
-            : "flex-row items-center justify-between"
+          "flex flex-col gap-4 md:pt-3.5",
+          isCollapsed && "md:gap-2"
         )}
       >
-        <a href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">E</span>
-          </div>
-          {!isCollapsed && (
-            <span className="font-semibold bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              Epitrello
-            </span>
-          )}
-        </a>
+        {/* Top row: Logo + Actions */}
+        <div className={cn(
+          "flex items-center justify-between",
+          isCollapsed && "md:flex-col md:gap-2"
+        )}>
+          <a href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">E</span>
+            </div>
+            {!isCollapsed && (
+              <span className="font-semibold bg-linear-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                Epitrello
+              </span>
+            )}
+          </a>
 
-        <motion.div
-          key={isCollapsed ? "header-collapsed" : "header-expanded"}
-          className={cn(
-            "flex items-center gap-2",
-            isCollapsed ? "flex-row md:flex-col-reverse" : "flex-row"
-          )}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-        >
-          <NotificationsPopover 
-            notifications={sampleNotifications} 
-            notificationCount={count}
-          />
-          <SidebarTrigger />
-        </motion.div>
+          <motion.div
+            key={isCollapsed ? "header-collapsed" : "header-expanded"}
+            className={cn(
+              "flex items-center gap-2",
+              isCollapsed ? "flex-row md:flex-col-reverse" : "flex-row"
+            )}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+          >
+            <NotificationsPopover 
+              notifications={sampleNotifications} 
+              notificationCount={count}
+            />
+            <SidebarTrigger />
+          </motion.div>
+        </div>
+
+        {/* Search bar - Full width */}
+        {!isCollapsed && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="w-full"
+          >
+            <SearchCommand />
+          </motion.div>
+        )}
       </SidebarHeader>
       <SidebarContent className="gap-4 px-2 py-4">
         <DashboardNavigation routes={dashboardRoutes} notificationCount={count} />

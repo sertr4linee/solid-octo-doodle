@@ -67,6 +67,7 @@ export async function POST(
     });
 
     if (!label) {
+      console.error(`❌ Label ${labelId} not found for board ${task.list.board.id}`);
       return NextResponse.json(
         { error: "Label not found or doesn't belong to this board" },
         { status: 404 }
@@ -84,11 +85,14 @@ export async function POST(
     });
 
     if (existing) {
+      console.error(`❌ Label ${labelId} already assigned to task ${taskId}`);
       return NextResponse.json(
         { error: "Label already assigned to this task" },
         { status: 400 }
       );
     }
+
+    console.log(`✅ Creating task label for task ${taskId} with label ${labelId}`);
 
     // Create task label
     const taskLabel = await prisma.taskLabel.create({

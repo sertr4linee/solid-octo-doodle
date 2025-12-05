@@ -36,6 +36,13 @@ export type SocketEvent =
   | "task:label:removed"
   | "task:reaction:added"
   | "task:reaction:removed"
+  | "checklist:created"
+  | "checklist:updated"
+  | "checklist:deleted"
+  | "checklist:item:created"
+  | "checklist:item:updated"
+  | "checklist:item:deleted"
+  | "checklist:item:checked"
   | "notification:new";
 
 export interface SocketEventData {

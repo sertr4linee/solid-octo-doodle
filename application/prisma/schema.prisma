@@ -25,6 +25,8 @@ model User {
   comments      Comment[]
   activities    Activity[]
   reactions     TaskReaction[]
+  checklistItems ChecklistItem[]
+  checklistTemplates ChecklistTemplate[]
 
   @@map("user")
 }
@@ -214,6 +216,7 @@ model Task {
   activities  Activity[]
   taskLabels  TaskLabel[]
   reactions   TaskReaction[]
+  checklists  Checklist[]
 
   @@map("task")
 }
@@ -384,4 +387,52 @@ model SearchHistory {
 
   @@index([userId, createdAt])
   @@map("search_history")
+}
+
+// Checklists System
+model Checklist {
+  id        String         @id
+  taskId    String
+  name      String
+  position  Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  task      Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  items     ChecklistItem[]
+
+  @@map("checklist")
+}
+
+model ChecklistItem {
+  id          String         @id
+  checklistId String
+  content     String         // Markdown support
+  checked     Boolean        @default(false)
+  position    Int            @default(0)
+  assigneeId  String?
+  dueDate     DateTime?
+  parentId    String?        // For nested items
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  checklist   Checklist      @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  assignee    User?          @relation(fields: [assigneeId], references: [id])
+  parent      ChecklistItem? @relation("ChecklistItemNesting", fields: [parentId], references: [id], onDelete: Cascade)
+  children    ChecklistItem[] @relation("ChecklistItemNesting")
+
+  @@map("checklist_item")
+}
+
+model ChecklistTemplate {
+  id        String   @id
+  boardId   String?  // null = global template
+  name      String
+  items     String   // JSON array of template items
+  isGlobal  Boolean  @default(false)
+  usageCount Int     @default(0)
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  creator   User     @relation(fields: [createdBy], references: [id])
+
+  @@map("checklist_template")
 }
