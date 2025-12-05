@@ -50,6 +50,7 @@ import { TaskReactions } from "@/components/tasks/task-reactions";
 import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
 import { ViewSwitcher } from "@/components/boards/view-switcher";
 import { ChecklistList } from "@/components/checklists/checklist-list";
+import { AssignUserDialog } from "@/components/tasks/assign-user-dialog";
 import { CalendarView } from "@/components/boards/calendar-view";
 import { TableView } from "@/components/boards/table-view";
 import { GalleryView } from "@/components/boards/gallery-view";
@@ -1139,6 +1140,7 @@ function ListColumn({ list, boardId }: { list: any; boardId: string }) {
 function TaskCard({ task, boardId }: { task: any; boardId: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
 
   const handleDeleteTask = async () => {
     if (!confirm("Are you sure you want to delete this task?")) return;
@@ -1301,7 +1303,15 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
 
             {/* Actions */}
             <div className="flex items-center gap-2 flex-wrap">
-              <Button variant="outline" size="sm" className="border-2 border-blue-200 hover:bg-blue-50 text-blue-700 font-semibold">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-2 border-blue-200 hover:bg-blue-50 text-blue-700 font-semibold"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsAssignDialogOpen(true);
+                }}
+              >
                 <Users className="h-4 w-4 mr-2" />
                 Assign
               </Button>
@@ -1331,6 +1341,19 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Assign User Dialog */}
+      <AssignUserDialog
+        open={isAssignDialogOpen}
+        onOpenChange={setIsAssignDialogOpen}
+        taskId={task.id}
+        boardId={boardId}
+        currentAssigneeId={task.assignee?.id}
+        onSuccess={() => {
+          // Refresh will happen via Socket.IO
+          toast.success("Task assignment updated");
+        }}
+      />
     </>
   );
 }

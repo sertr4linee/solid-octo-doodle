@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChecklistCard } from "./checklist-card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { CreateChecklistDialog } from "./create-checklist-dialog";
+import { useSocket } from "@/hooks/use-socket";
+import { toast } from "sonner";
 
 interface Checklist {
   id: string;
@@ -32,17 +34,67 @@ interface ChecklistItem {
 interface ChecklistListProps {
   taskId: string;
   boardId: string;
-  checklists: Checklist[];
-  onUpdate?: () => void;
 }
 
-export function ChecklistList({
-  taskId,
-  boardId,
-  checklists,
-  onUpdate,
-}: ChecklistListProps) {
+export function ChecklistList({ taskId, boardId }: ChecklistListProps) {
+  const [checklists, setChecklists] = useState<Checklist[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const { isConnected, on, off } = useSocket();
+
+  const loadChecklists = async () => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/checklists`);
+      if (!response.ok) throw new Error("Failed to load checklists");
+      
+      const data = await response.json();
+      setChecklists(data);
+    } catch (error) {
+      console.error("Error loading checklists:", error);
+      toast.error("Failed to load checklists");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadChecklists();
+  }, [taskId]);
+
+  // Real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const handleChecklistEvent = () => {
+      loadChecklists();
+    };
+
+    on("checklist:created", handleChecklistEvent);
+    on("checklist:updated", handleChecklistEvent);
+    on("checklist:deleted", handleChecklistEvent);
+    on("checklist:item:created", handleChecklistEvent);
+    on("checklist:item:updated", handleChecklistEvent);
+    on("checklist:item:deleted", handleChecklistEvent);
+    on("checklist:item:checked", handleChecklistEvent);
+
+    return () => {
+      off("checklist:created", handleChecklistEvent);
+      off("checklist:updated", handleChecklistEvent);
+      off("checklist:deleted", handleChecklistEvent);
+      off("checklist:item:created", handleChecklistEvent);
+      off("checklist:item:updated", handleChecklistEvent);
+      off("checklist:item:deleted", handleChecklistEvent);
+      off("checklist:item:checked", handleChecklistEvent);
+    };
+  }, [isConnected, taskId, on, off]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   // Calculate total progress
   const totalItems = checklists.reduce((sum, checklist) => {
@@ -55,7 +107,7 @@ export function ChecklistList({
   const checkedItems = checklists.reduce((sum, checklist) => {
     const count = checklist.items.reduce((itemSum, item) => {
       const itemChecked = item.checked ? 1 : 0;
-      const childrenChecked = item.children?.filter(c => c.checked).length || 0;
+      const childrenChecked = item.children?.filter((c: ChecklistItem) => c.checked).length || 0;
       return itemSum + itemChecked + childrenChecked;
     }, 0);
     return sum + count;
@@ -93,7 +145,7 @@ export function ChecklistList({
               checklist={checklist}
               taskId={taskId}
               boardId={boardId}
-              onUpdate={onUpdate}
+              onUpdate={loadChecklists}
             />
           ))}
       </div>
@@ -113,7 +165,10 @@ export function ChecklistList({
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         taskId={taskId}
-        onSuccess={onUpdate}
+        onSuccess={() => {
+          loadChecklists();
+          setShowCreateDialog(false);
+        }}
       />
     </div>
   );
