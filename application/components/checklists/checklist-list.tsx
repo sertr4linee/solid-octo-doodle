@@ -7,29 +7,7 @@ import { Plus, Loader2 } from "lucide-react";
 import { CreateChecklistDialog } from "./create-checklist-dialog";
 import { useSocket } from "@/hooks/use-socket";
 import { toast } from "sonner";
-
-interface Checklist {
-  id: string;
-  name: string;
-  position: number;
-  items: ChecklistItem[];
-}
-
-interface ChecklistItem {
-  id: string;
-  content: string;
-  checked: boolean;
-  position: number;
-  assigneeId?: string;
-  dueDate?: string;
-  assignee?: {
-    id: string;
-    name: string;
-    email: string;
-    image?: string;
-  };
-  children?: ChecklistItem[];
-}
+import type { Checklist, ChecklistItem } from "./types";
 
 interface ChecklistListProps {
   taskId: string;

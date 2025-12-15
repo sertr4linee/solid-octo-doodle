@@ -86,11 +86,14 @@ interface Board {
     id: string;
     name: string;
     position: number;
+    color?: string;
+    emoji?: string;
     tasks: Array<{
       id: string;
       title: string;
       description?: string;
       position: number;
+      dueDate?: string;
       assignee?: {
         id: string;
         name: string;
@@ -1179,7 +1182,6 @@ function TaskCard({ task, boardId }: { task: any; boardId: string }) {
                 <LabelBadge
                   key={tl.label.id}
                   label={tl.label}
-                  size="sm"
                   variant="pill"
                 />
               ))}

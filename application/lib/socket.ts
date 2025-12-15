@@ -121,14 +121,14 @@ export function initializeSocket(httpServer: HTTPServer) {
     socket.on("join:organization", (organizationId: string) => {
       const room = `org:${organizationId}`;
       socket.join(room);
-      const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+      const roomSize = io?.sockets.adapter.rooms.get(room)?.size || 0;
       console.log(`📍 ${userName} joined organization: ${organizationId} (${roomSize} users in room)`);
     });
 
     socket.on("leave:organization", (organizationId: string) => {
       const room = `org:${organizationId}`;
       socket.leave(room);
-      const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+      const roomSize = io?.sockets.adapter.rooms.get(room)?.size || 0;
       console.log(`📍 ${userName} left organization: ${organizationId} (${roomSize} users remaining)`);
     });
 
@@ -146,7 +146,7 @@ export function initializeSocket(httpServer: HTTPServer) {
     socket.on("leave:board", (boardId: string) => {
       const room = `board:${boardId}`;
       socket.leave(room);
-      const roomSize = io.sockets.adapter.rooms.get(room)?.size || 0;
+      const roomSize = io?.sockets.adapter.rooms.get(room)?.size || 0;
       console.log(`📋 ${userName} left board: ${boardId} (${roomSize} users remaining)`);
     });
 

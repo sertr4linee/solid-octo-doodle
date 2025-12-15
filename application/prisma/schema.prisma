@@ -89,6 +89,8 @@ model Organization {
   members     Member[]
   team        team[]
   boards      Board[]
+  integrations Integration[]
+  apiKeys     ApiKey[]
 
   @@map("organization")
 }
@@ -163,6 +165,8 @@ model Board {
   activities     Activity[]
   labels         Label[]
   views          BoardView[]
+  integrations   Integration[]
+  emailIntegration EmailIntegration?
 
   @@map("board")
 }
@@ -436,3 +440,162 @@ model ChecklistTemplate {
 
   @@map("checklist_template")
 }
+
+// ==========================================
+// INTEGRATIONS SYSTEM
+// ==========================================
+
+// Integration types: slack, github, google_drive, zapier, email, webhook
+model Integration {
+  id              String   @id
+  type            String   // slack, github, google_drive, zapier, email, webhook
+  name            String   // Display name
+  description     String?
+  enabled         Boolean  @default(true)
+  
+  // OAuth credentials (encrypted)
+  accessToken     String?
+  refreshToken    String?
+  tokenExpiresAt  DateTime?
+  
+  // Configuration (JSON)
+  config          String   @default("{}")
+  
+  // Scope - can be organization-wide or board-specific
+  organizationId  String?
+  boardId         String?
+  
+  // Metadata
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  lastUsedAt      DateTime?
+  
+  // Relations
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  board           Board?        @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  logs            IntegrationLog[]
+  webhooks        Webhook[]
+  
+  @@map("integration")
+}
+
+// Webhook configuration for outgoing webhooks
+model Webhook {
+  id            String   @id
+  integrationId String
+  url           String   // Webhook URL
+  secret        String?  // HMAC secret for verification
+  events        String   // JSON array of event types to trigger
+  enabled       Boolean  @default(true)
+  
+  // Retry configuration
+  maxRetries    Int      @default(3)
+  retryDelay    Int      @default(5000) // ms
+  
+  // Stats
+  successCount  Int      @default(0)
+  failureCount  Int      @default(0)
+  lastTriggered DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  deliveries    WebhookDelivery[]
+  
+  @@map("webhook")
+}
+
+// Track webhook delivery attempts
+model WebhookDelivery {
+  id           String   @id
+  webhookId    String
+  event        String   // Event type
+  payload      String   // JSON payload sent
+  
+  // Response
+  statusCode   Int?
+  response     String?  // Response body
+  duration     Int?     // ms
+  
+  // Status
+  status       String   // pending, success, failed
+  attempts     Int      @default(1)
+  error        String?
+  
+  createdAt    DateTime @default(now())
+  deliveredAt  DateTime?
+  
+  webhook      Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  
+  @@map("webhook_delivery")
+}
+
+// Log integration activities
+model IntegrationLog {
+  id            String   @id
+  integrationId String
+  action        String   // e.g., "card_created", "notification_sent"
+  status        String   // success, error, warning
+  message       String?
+  metadata      String?  // JSON with additional data
+  
+  createdAt     DateTime @default(now())
+  
+  integration   Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  
+  @@map("integration_log")
+}
+
+// API Keys for public API access
+model ApiKey {
+  id              String   @id
+  name            String
+  key             String   @unique // Hashed key
+  prefix          String   // First 8 chars for display (e.g., "pk_live_")
+  
+  // Permissions
+  scopes          String   // JSON array of allowed scopes
+  
+  // Rate limiting
+  rateLimit       Int      @default(1000) // requests per hour
+  requestCount    Int      @default(0)
+  lastResetAt     DateTime @default(now())
+  
+  // Ownership
+  organizationId  String?
+  userId          String
+  
+  // Metadata
+  lastUsedAt      DateTime?
+  expiresAt       DateTime?
+  enabled         Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  @@map("api_key")
+}
+
+// Email-to-board configuration
+model EmailIntegration {
+  id              String   @id
+  boardId         String   @unique
+  inboundEmail    String   @unique // e.g., board-abc123@boards.yourapp.com
+  defaultListId   String?  // List to create cards in
+  enabled         Boolean  @default(true)
+  
+  // Processing rules (JSON)
+  rules           String   @default("[]")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  board           Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  
+  @@map("email_integration")
+}
+

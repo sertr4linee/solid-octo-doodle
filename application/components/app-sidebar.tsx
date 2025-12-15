@@ -21,6 +21,7 @@ import {
   Building2,
   Bell,
   Store,
+  Link2,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import type { Route } from "./layout/nav-main";
@@ -126,6 +127,12 @@ const dashboardRoutes: Route[] = [
     icon: <Bell className="size-4" />,
     link: "/dashboard/notifications",
     badge: "notification-count",
+  },
+  {
+    id: "connections",
+    title: "Connections",
+    icon: <Link2 className="size-4" />,
+    link: "/dashboard/connections",
   },
   {
     id: "settings",
