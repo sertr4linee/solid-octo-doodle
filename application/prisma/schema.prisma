@@ -35,6 +35,7 @@ model User {
   commentReactions CommentReaction[]
   commentMentions CommentMention[]
   commentAttachments CommentAttachment[]
+  notifications   Notification[]
 
   @@map("user")
 }
@@ -734,5 +735,23 @@ model EmailIntegration {
   board           Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   
   @@map("email_integration")
+}
+
+// Notifications system
+model Notification {
+  id        String   @id
+  userId    String
+  type      String   // 'mention', 'reaction', 'assignment', 'comment', 'thread_resolved', etc.
+  title     String
+  message   String
+  data      String?  // JSON for additional context
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, read])
+  @@map("notification")
 }
 
