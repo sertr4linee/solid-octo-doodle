@@ -466,29 +466,6 @@ export default function BoardDetailPage({
     }
   };
 
-  const handleAddList = async () => {
-    if (!board || !newListName.trim()) return;
-
-    try {
-      const response = await fetch(`/api/boards/${board.id}/lists`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newListName }),
-      });
-
-      if (response.ok) {
-        toast.success("List created");
-        setNewListName("");
-        setIsAddListOpen(false);
-        loadBoard(board.id);
-      } else {
-        toast.error("Failed to create list");
-      }
-    } catch (error) {
-      toast.error("Failed to create list");
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">

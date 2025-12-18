@@ -3,12 +3,12 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/boards/[boardId]/tasks/[taskId]/attachments - List attachments for a task
-// POST /api/boards/[boardId]/tasks/[taskId]/attachments - Add external link attachment
+// GET /api/boards/[id]/lists/[listId]/tasks/[taskId]/attachments - List attachments for a task
+// POST /api/boards/[id]/lists/[listId]/tasks/[taskId]/attachments - Add external link attachment
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; taskId: string }> }
+  { params }: { params: Promise<{ id: string; listId: string; taskId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, taskId } = await params;
+    const { id: boardId, taskId } = await params;
 
     // Verify access to board
     const board = await prisma.board.findFirst({
@@ -61,7 +61,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; taskId: string }> }
+  { params }: { params: Promise<{ id: string; listId: string; taskId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -69,7 +69,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, taskId } = await params;
+    const { id: boardId, listId, taskId } = await params;
     const body = await request.json();
     const { name, url, thumbnailUrl } = body;
 
@@ -91,6 +91,7 @@ export async function POST(
     const task = await prisma.task.findFirst({
       where: {
         id: taskId,
+        listId,
         list: {
           boardId,
           board: {
@@ -168,7 +169,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; taskId: string }> }
+  { params }: { params: Promise<{ id: string; listId: string; taskId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -176,7 +177,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, taskId } = await params;
+    const { id: boardId, listId, taskId } = await params;
     const { searchParams } = new URL(request.url);
     const attachmentId = searchParams.get("attachmentId");
 
@@ -193,6 +194,7 @@ export async function DELETE(
         id: attachmentId,
         taskId,
         task: {
+          listId,
           list: {
             boardId,
             board: {

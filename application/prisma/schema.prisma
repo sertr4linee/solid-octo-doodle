@@ -27,6 +27,7 @@ model User {
   reactions     TaskReaction[]
   checklistItems ChecklistItem[]
   checklistTemplates ChecklistTemplate[]
+  attachments   Attachment[]
 
   @@map("user")
 }
@@ -271,11 +272,14 @@ model Attachment {
   
   // Relations
   task            Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy      User     @relation(fields: [uploadedById], references: [id])
+  integration     Integration? @relation(fields: [integrationId], references: [id])
   previousVersion Attachment? @relation("AttachmentVersions", fields: [previousVersionId], references: [id])
   nextVersions    Attachment[] @relation("AttachmentVersions")
 
   @@index([taskId])
   @@index([driveFileId])
+  @@index([uploadedById])
   @@map("attachment")
 }
 
@@ -517,6 +521,7 @@ model Integration {
   board           Board?        @relation(fields: [boardId], references: [id], onDelete: Cascade)
   logs            IntegrationLog[]
   webhooks        Webhook[]
+  attachments     Attachment[]
   
   @@map("integration")
 }

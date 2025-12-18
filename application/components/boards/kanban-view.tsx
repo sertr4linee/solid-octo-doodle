@@ -38,6 +38,8 @@ import { TaskReactions } from "@/components/tasks/task-reactions";
 import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
 import { ChecklistList } from "@/components/checklists/checklist-list";
 import { AssignUserDialog } from "@/components/tasks/assign-user-dialog";
+import { AttachmentsSection } from "@/components/attachments";
+import { Paperclip } from "lucide-react";
 
 // Simplified label type for display
 interface SimpleLabel {
@@ -56,7 +58,7 @@ interface Task {
   description?: string;
   position: number;
   emoji?: string;
-  listId: string;
+  listId?: string; // Optional - will be derived from the parent list
   dueDate?: string;
   assignee?: {
     id: string;
@@ -144,7 +146,7 @@ export function KanbanView({ boardId, lists, onTaskMove, onRefresh }: KanbanView
 
           if (response.ok) {
             toast.success("Task moved");
-            onTaskMove?.(item.id, originalTask.listId, item.column, item.position);
+            onTaskMove?.(item.id, originalTask.listId || item.column, item.column, item.position);
             onRefresh?.();
           } else {
             toast.error("Failed to move task");
@@ -597,6 +599,21 @@ function TaskCardItem({
             <div>
               <Label className="text-xs text-muted-foreground mb-2 block">Checklists</Label>
               <ChecklistList taskId={task.id} boardId={boardId} />
+            </div>
+
+            {/* Attachments */}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
+                <Paperclip className="h-3.5 w-3.5" />
+                Attachments
+              </Label>
+              <AttachmentsSection
+                taskId={task.id}
+                boardId={boardId}
+                listId={task.listId}
+                canUpload={true}
+                canDelete={true}
+              />
             </div>
 
             {/* Actions */}
