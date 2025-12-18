@@ -28,6 +28,13 @@ model User {
   checklistItems ChecklistItem[]
   checklistTemplates ChecklistTemplate[]
   attachments   Attachment[]
+  
+  // Comment system relations
+  resolvedComments Comment[] @relation("CommentResolver")
+  commentEdits    CommentEdit[]
+  commentReactions CommentReaction[]
+  commentMentions CommentMention[]
+  commentAttachments CommentAttachment[]
 
   @@map("user")
 }
@@ -229,15 +236,99 @@ model Task {
 
 model Comment {
   id        String   @id
-  content   String
+  content   String   // Markdown content
   taskId    String
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Threading support
+  parentId  String?  // For replies/threads
+  isResolved Boolean @default(false)
+  resolvedAt DateTime?
+  resolvedById String?
+  
+  // Edit history
+  isEdited  Boolean  @default(false)
+  editHistory CommentEdit[]
+  
+  // Relations
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id])
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  resolvedBy User?   @relation("CommentResolver", fields: [resolvedById], references: [id])
+  
+  // Reactions & Mentions
+  reactions CommentReaction[]
+  mentions  CommentMention[]
+  attachments CommentAttachment[]
 
+  @@index([taskId])
+  @@index([parentId])
   @@map("comment")
+}
+
+// Comment edit history
+model CommentEdit {
+  id        String   @id
+  commentId String
+  content   String   // Previous content
+  editedAt  DateTime @default(now())
+  editedById String
+  
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  editedBy  User     @relation(fields: [editedById], references: [id])
+  
+  @@map("comment_edit")
+}
+
+// Reactions on comments
+model CommentReaction {
+  id        String   @id
+  commentId String
+  userId    String
+  emoji     String   // Unicode emoji
+  createdAt DateTime @default(now())
+  
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  
+  @@unique([commentId, userId, emoji])
+  @@map("comment_reaction")
+}
+
+// Mentions in comments
+model CommentMention {
+  id          String   @id
+  commentId   String
+  userId      String   // Mentioned user
+  notified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  comment     Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id])
+  
+  @@unique([commentId, userId])
+  @@map("comment_mention")
+}
+
+// Attachments in comments
+model CommentAttachment {
+  id          String   @id
+  commentId   String
+  name        String
+  mimeType    String
+  size        Int
+  url         String
+  thumbnailUrl String?
+  uploadedById String
+  createdAt   DateTime @default(now())
+  
+  comment     Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  uploadedBy  User     @relation(fields: [uploadedById], references: [id])
+  
+  @@map("comment_attachment")
 }
 
 // File Attachments System
