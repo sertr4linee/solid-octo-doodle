@@ -271,11 +271,11 @@ model Comment {
 
 // Comment edit history
 model CommentEdit {
-  id        String   @id
-  commentId String
-  content   String   // Previous content
-  editedAt  DateTime @default(now())
-  editedById String
+  id              String   @id
+  commentId       String
+  previousContent String   // Previous content before edit
+  editedAt        DateTime @default(now())
+  editedById      String
   
   comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
   editedBy  User     @relation(fields: [editedById], references: [id])
