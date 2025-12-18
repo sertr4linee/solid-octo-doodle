@@ -29,7 +29,7 @@ import { MarkdownRenderer } from "./markdown-renderer";
 interface User {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   image?: string | null;
 }
 
@@ -39,9 +39,10 @@ interface MarkdownEditorProps {
   placeholder?: string;
   disabled?: boolean;
   users?: User[]; // Users that can be mentioned
+  boardMembers?: User[]; // Alias for users for board context
   onMention?: (userId: string) => void;
   className?: string;
-  minHeight?: string;
+  minHeight?: number | string;
 }
 
 export function MarkdownEditor({
@@ -50,6 +51,7 @@ export function MarkdownEditor({
   placeholder = "Write a comment... Use @ to mention someone",
   disabled = false,
   users = [],
+  boardMembers = [],
   onMention,
   className,
   minHeight = "100px",
@@ -61,17 +63,20 @@ export function MarkdownEditor({
   const [cursorPosition, setCursorPosition] = React.useState(0);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
+  // Use boardMembers if provided, otherwise users
+  const mentionableUsers = boardMembers.length > 0 ? boardMembers : users;
+
   // Filter users based on mention search
   const filteredUsers = React.useMemo(() => {
-    if (!mentionSearch) return users.slice(0, 5);
-    return users
+    if (!mentionSearch) return mentionableUsers.slice(0, 5);
+    return mentionableUsers
       .filter(
         (u) =>
           u.name.toLowerCase().includes(mentionSearch.toLowerCase()) ||
-          u.email.toLowerCase().includes(mentionSearch.toLowerCase())
+          (u.email && u.email.toLowerCase().includes(mentionSearch.toLowerCase()))
       )
       .slice(0, 5);
-  }, [users, mentionSearch]);
+  }, [mentionableUsers, mentionSearch]);
 
   // Handle text changes and detect @mentions
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {

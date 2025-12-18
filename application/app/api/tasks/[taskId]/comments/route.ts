@@ -56,7 +56,7 @@ export async function GET(
       where.content = { contains: search, mode: "insensitive" };
     }
 
-    if (resolved !== null && resolved !== undefined) {
+    if (resolved !== null) {
       where.isResolved = resolved === "true";
     }
 
@@ -132,7 +132,10 @@ export async function GET(
     return NextResponse.json({ comments: commentsWithGroupedReactions });
   } catch (error) {
     console.error("Error fetching comments:", error);
-    return NextResponse.json({ error: "Failed to fetch comments" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Failed to fetch comments",
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 });
   }
 }
 

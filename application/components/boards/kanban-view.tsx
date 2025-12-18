@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   KanbanProvider,
   KanbanBoard,
@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MoreHorizontal, Plus, Archive, Loader2, Trash2, Users } from "lucide-react";
+import { MoreHorizontal, Plus, Archive, Loader2, Trash2, Users, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { TaskReactions } from "@/components/tasks/task-reactions";
 import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
@@ -40,6 +40,8 @@ import { ChecklistList } from "@/components/checklists/checklist-list";
 import { AssignUserDialog } from "@/components/tasks/assign-user-dialog";
 import { AttachmentsSection } from "@/components/attachments";
 import { Paperclip } from "lucide-react";
+import { CommentList } from "@/components/comments";
+import { useSession } from "@/lib/auth-client";
 
 // Simplified label type for display
 interface SimpleLabel {
@@ -454,6 +456,27 @@ function TaskCardItem({
   const [isOpen, setIsOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [boardMembers, setBoardMembers] = useState<{ id: string; name: string; email?: string; image?: string }[]>([]);
+  const { data: session } = useSession();
+
+  // Fetch board members when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      fetch(`/api/boards/${boardId}/members`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setBoardMembers(data.map((m: any) => ({
+              id: m.user?.id || m.userId,
+              name: m.user?.name || "Unknown",
+              email: m.user?.email,
+              image: m.user?.image,
+            })));
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isOpen, boardId]);
 
   const handleDeleteTask = async () => {
     if (!confirm("Are you sure you want to delete this task?")) return;
@@ -588,12 +611,19 @@ function TaskCardItem({
             </div>
 
             {/* Comments */}
-            {task._count.comments > 0 && (
-              <div>
-                <Label className="text-xs text-muted-foreground">Comments</Label>
-                <p className="text-sm mt-1">{task._count.comments} comments</p>
-              </div>
-            )}
+            <div>
+              <Label className="text-xs text-muted-foreground mb-2 flex items-center gap-2">
+                <MessageSquare className="h-3.5 w-3.5" />
+                Comments
+              </Label>
+              {session?.user?.id && (
+                <CommentList
+                  taskId={task.id}
+                  currentUserId={session.user.id}
+                  boardMembers={boardMembers}
+                />
+              )}
+            </div>
 
             {/* Checklists */}
             <div>

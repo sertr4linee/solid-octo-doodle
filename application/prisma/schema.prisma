@@ -36,6 +36,10 @@ model User {
   commentMentions CommentMention[]
   commentAttachments CommentAttachment[]
   notifications   Notification[]
+  
+  // Automation relations
+  automationRulesCreated AutomationRule[] @relation("AutomationCreator")
+  automationWebhooksCreated AutomationWebhook[] @relation("WebhookCreator")
 
   @@map("user")
 }
@@ -176,6 +180,8 @@ model Board {
   views          BoardView[]
   integrations   Integration[]
   emailIntegration EmailIntegration?
+  automationRules AutomationRule[]
+  automationWebhooks AutomationWebhook[]
 
   @@map("board")
 }
@@ -753,5 +759,137 @@ model Notification {
   
   @@index([userId, read])
   @@map("notification")
+}
+
+// ==========================================
+// AUTOMATION SYSTEM
+// ==========================================
+
+// Automation rules with if-then logic
+model AutomationRule {
+  id              String   @id
+  name            String
+  description     String?
+  boardId         String
+  enabled         Boolean  @default(true)
+  
+  // Trigger configuration
+  triggerType     String   // due_date_approaching, checklist_completed, card_created, card_moved, comment_added, label_added, member_assigned, webhook_received
+  triggerConfig   String   @default("{}") // JSON with trigger-specific settings
+  
+  // Conditions (optional filters)
+  conditions      String   @default("[]") // JSON array of conditions to check
+  
+  // Actions to execute (supports multiple)
+  actions         String   // JSON array of action configurations
+  
+  // Execution settings
+  isTemplate      Boolean  @default(false) // Can be used as template
+  templateId      String?  // If created from a template
+  priority        Int      @default(0) // Higher = runs first
+  maxExecutions   Int?     // Limit executions (null = unlimited)
+  executionCount  Int      @default(0)
+  
+  // Timing
+  delay           Int?     // Delay in milliseconds before executing
+  schedule        String?  // Cron expression for scheduled checks
+  lastCheckedAt   DateTime?
+  
+  // Metadata
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  board           Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdBy       User     @relation("AutomationCreator", fields: [createdById], references: [id])
+  logs            AutomationLog[]
+  
+  @@index([boardId, enabled])
+  @@index([triggerType])
+  @@map("automation_rule")
+}
+
+// Log of automation executions
+model AutomationLog {
+  id              String   @id
+  ruleId          String
+  
+  // Trigger context
+  triggerEvent    String   // What event triggered this
+  triggerData     String?  // JSON with trigger context (taskId, userId, etc.)
+  
+  // Execution result
+  status          String   // pending, running, success, failed, skipped
+  actionsExecuted String?  // JSON array of executed actions
+  error           String?  // Error message if failed
+  
+  // Performance
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+  duration        Int?     // ms
+  
+  rule            AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  
+  @@index([ruleId, startedAt])
+  @@map("automation_log")
+}
+
+// Predefined automation templates
+model AutomationTemplate {
+  id              String   @id
+  name            String
+  description     String
+  category        String   // productivity, notifications, organization, integrations
+  icon            String?  // Emoji or icon name
+  
+  // Template definition
+  triggerType     String
+  triggerConfig   String   @default("{}")
+  conditions      String   @default("[]")
+  actions         String
+  
+  // Usage tracking
+  usageCount      Int      @default(0)
+  isPredefined    Boolean  @default(true)
+  isPublic        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("automation_template")
+}
+
+// Automation webhook endpoints (for incoming webhooks)
+model AutomationWebhook {
+  id              String   @id
+  boardId         String
+  name            String
+  description     String?
+  
+  // Webhook config
+  secret          String   // HMAC secret for verification
+  endpoint        String   @unique // Unique endpoint path
+  enabled         Boolean  @default(true)
+  
+  // Security
+  allowedIps      String?  // JSON array of allowed IPs (null = all)
+  requireSignature Boolean @default(true)
+  
+  // Stats
+  callCount       Int      @default(0)
+  lastCalledAt    DateTime?
+  
+  // Actions to execute when webhook is called
+  actions         String   // JSON array of actions
+  
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  board           Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  createdBy       User     @relation("WebhookCreator", fields: [createdById], references: [id])
+  
+  @@map("automation_webhook")
 }
 

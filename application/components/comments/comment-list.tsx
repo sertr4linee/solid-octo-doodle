@@ -68,8 +68,14 @@ export function CommentList({
       if (filter === "resolved") params.set("resolved", "true");
       if (filter === "unresolved") params.set("resolved", "false");
 
-      const response = await fetch(`/api/tasks/${taskId}/comments?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch comments");
+      const response = await fetch(`/api/tasks/${taskId}/comments?${params}`, {
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Comments API error:", response.status, errorData);
+        throw new Error(errorData.error || "Failed to fetch comments");
+      }
 
       const data = await response.json();
       setComments(data.comments || []);
@@ -106,6 +112,7 @@ export function CommentList({
       const response = await fetch(`/api/tasks/${taskId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           content: newComment,
           mentionedUserIds,
@@ -136,6 +143,7 @@ export function CommentList({
       const response = await fetch(`/api/tasks/${taskId}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           content: replyContent,
           parentId,
@@ -166,6 +174,7 @@ export function CommentList({
       const response = await fetch(`/api/tasks/${taskId}/comments/${commentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ content, mentionedUserIds }),
       });
 
@@ -190,6 +199,7 @@ export function CommentList({
     try {
       const response = await fetch(`/api/tasks/${taskId}/comments/${commentId}`, {
         method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) throw new Error("Failed to delete comment");
@@ -223,6 +233,7 @@ export function CommentList({
       const response = await fetch(`/api/tasks/${taskId}/comments/${commentId}/reactions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ emoji }),
       });
 
@@ -295,6 +306,7 @@ export function CommentList({
       const response = await fetch(`/api/tasks/${taskId}/comments/${commentId}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ resolved }),
       });
 
@@ -332,7 +344,9 @@ export function CommentList({
     }
 
     try {
-      const response = await fetch(`/api/tasks/${taskId}/comments?parentId=${commentId}`);
+      const response = await fetch(`/api/tasks/${taskId}/comments?parentId=${commentId}`, {
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch replies");
 
       const data = await response.json();

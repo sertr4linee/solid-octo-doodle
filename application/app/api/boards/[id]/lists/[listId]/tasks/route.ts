@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { emitToBoard } from "@/lib/socket";
 import { canAccessBoard } from "@/lib/permissions";
+import { triggerAutomation } from "@/lib/automation-engine";
 
 // POST - Create a new task
 export async function POST(
