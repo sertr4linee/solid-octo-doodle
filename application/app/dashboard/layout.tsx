@@ -30,7 +30,7 @@ export default function DashboardLayout({
       <SidebarProvider defaultOpen={true}>
         <div className="flex min-h-screen w-full">
           <DashboardSidebar />
-          <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-900">
+          <main className="flex-1 overflow-auto bg-background">
             {children}
           </main>
         </div>

@@ -28,7 +28,6 @@ import { toast } from "sonner";
 import {
   Send,
   Github,
-  Mail,
   Webhook,
   Key,
   Settings,
@@ -40,7 +39,6 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Zap,
   FileText,
   Copy,
   Eye,
@@ -77,22 +75,6 @@ const INTEGRATION_TYPES = {
     color: "bg-[#4285F4]",
     features: ["File attachments", "Preview", "Sync"],
     oauthUrl: "/api/integrations/google/oauth",
-  },
-  zapier: {
-    name: "Zapier",
-    description: "Connect with 5000+ apps via Zapier",
-    icon: Zap,
-    color: "bg-[#FF4A00]",
-    features: ["Triggers", "Actions", "Automation"],
-    oauthUrl: null, // Uses webhooks
-  },
-  email: {
-    name: "Email to Board",
-    description: "Create cards by sending emails",
-    icon: Mail,
-    color: "bg-[#EA4335]",
-    features: ["Unique email address", "Auto-categorization", "Rules"],
-    oauthUrl: null,
   },
   webhook: {
     name: "Webhooks",

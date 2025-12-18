@@ -221,6 +221,7 @@ model Task {
   taskLabels  TaskLabel[]
   reactions   TaskReaction[]
   checklists  Checklist[]
+  attachments Attachment[]
 
   @@map("task")
 }
@@ -236,6 +237,46 @@ model Comment {
   user      User     @relation(fields: [userId], references: [id])
 
   @@map("comment")
+}
+
+// File Attachments System
+model Attachment {
+  id              String   @id
+  taskId          String
+  
+  // File info
+  name            String   // Original filename
+  mimeType        String   // e.g., image/png, application/pdf
+  size            Int      // File size in bytes
+  
+  // Storage info
+  storageType     String   // google_drive, local, external_link
+  storageId       String?  // Google Drive file ID or local path
+  url             String   // Direct URL or Google Drive link
+  thumbnailUrl    String?  // Thumbnail URL for images
+  
+  // Google Drive specific
+  driveFileId     String?  // Google Drive file ID
+  driveFolderId   String?  // Parent folder ID in Drive
+  integrationId   String?  // Link to Google Drive integration used
+  
+  // Versioning
+  version         Int      @default(1)
+  previousVersionId String?
+  
+  // Metadata
+  uploadedById    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  task            Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  previousVersion Attachment? @relation("AttachmentVersions", fields: [previousVersionId], references: [id])
+  nextVersions    Attachment[] @relation("AttachmentVersions")
+
+  @@index([taskId])
+  @@index([driveFileId])
+  @@map("attachment")
 }
 
 model Activity {

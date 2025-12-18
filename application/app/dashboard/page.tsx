@@ -15,7 +15,8 @@ import {
   TrendingUp,
   CheckCircle2,
   Circle,
-  ArrowRight
+  ArrowRight,
+  Activity
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -98,9 +99,9 @@ export default function DashboardPage() {
       });
       
       setRecentBoards(boards.slice(0, 5));
-      setOrganizations(orgs);
+      setOrganizations(orgs.slice(0, 5));
     } catch (error) {
-      console.error("Error loading dashboard data:", error);
+      console.error("Failed to load dashboard data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -108,13 +109,13 @@ export default function DashboardPage() {
 
   if (isPending) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
           <div className="relative w-12 h-12 mx-auto">
-            <div className="absolute inset-0 border-2 border-white/20 rounded-full"></div>
-            <div className="absolute inset-0 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <div className="absolute inset-0 border-2 border-muted rounded-full"></div>
+            <div className="absolute inset-0 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
-          <p className="text-sm text-gray-400">Loading your workspace...</p>
+          <p className="text-sm text-muted-foreground">Loading your workspace...</p>
         </div>
       </div>
     );
@@ -125,229 +126,215 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="max-w-7xl mx-auto p-6 md:p-8 space-y-8">
-        {/* Header */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-white">Dashboard</h1>
-          <p className="text-sm text-gray-400">
-            Welcome back, {session.user.name || "User"}
+    <div className="min-h-screen bg-background p-8 space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">
+            Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Welcome back, {session.user.name}
           </p>
         </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground border border-border px-4 py-2 rounded-full">
+          <Clock className="h-4 w-4" />
+          {new Date().toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}
+        </div>
+      </div>
 
-        <Separator className="bg-white/10" />
+      <Separator className="bg-border" />
 
-        {/* Stats Grid */}
-        {isLoading ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <Card key={i} className="bg-white/5 border-white/10 backdrop-blur-sm">
-                <CardHeader className="pb-2">
-                  <Skeleton className="h-4 w-24 bg-white/10" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-16 bg-white/10" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
-                    Boards
-                  </CardDescription>
-                  <LayoutDashboard className="h-4 w-4 text-gray-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-white">{stats?.totalBoards || 0}</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Active projects
-                </p>
-              </CardContent>
-            </Card>
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-card border-border shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Boards
+            </CardTitle>
+            <LayoutDashboard className="h-4 w-4 text-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{stats?.totalBoards || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Active projects
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border-border shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Organizations
+            </CardTitle>
+            <Building2 className="h-4 w-4 text-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{stats?.totalOrganizations || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Teams managed
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border-border shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Task Completion
+            </CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              {stats?.totalTasks ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0}%
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Overall progress
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-card border-border shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Activity
+            </CardTitle>
+            <Activity className="h-4 w-4 text-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">{stats?.recentActivity || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Updates today
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
-                    Organizations
-                  </CardDescription>
-                  <Building2 className="h-4 w-4 text-gray-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-white">{stats?.totalOrganizations || 0}</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Teams you're in
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
-                    Tasks
-                  </CardDescription>
-                  <CheckCircle2 className="h-4 w-4 text-gray-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-white">
-                  {stats?.completedTasks || 0}
-                  <span className="text-lg text-gray-500">/{stats?.totalTasks || 0}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  {stats?.totalTasks ? Math.round((stats.completedTasks / stats.totalTasks) * 100) : 0}% complete
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/5 border-white/10 backdrop-blur-sm hover:bg-white/10 hover:border-white/20 transition-all duration-300">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardDescription className="text-gray-400 text-xs font-medium uppercase tracking-wide">
-                    Activity
-                  </CardDescription>
-                  <TrendingUp className="h-4 w-4 text-gray-500" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-white">{stats?.recentActivity || 0}</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Updates today
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* Recent Boards & Organizations */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Recent Boards */}
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Recent Boards</CardTitle>
-                <Link 
-                  href="/dashboard/boards"
-                  className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1"
-                >
-                  View all
-                  <ArrowRight className="h-3 w-3" />
-                </Link>
+      <div className="grid gap-8 md:grid-cols-7">
+        {/* Recent Boards - Takes up 4 columns */}
+        <Card className="col-span-4 bg-card border-border shadow-none">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold text-foreground">Recent Boards</CardTitle>
+              <Link 
+                href="/dashboard/boards"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              >
+                View all
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <CardDescription className="text-muted-foreground">
+              Your most recently updated boards
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-12 w-12 rounded bg-muted" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-32 bg-muted" />
+                      <Skeleton className="h-3 w-24 bg-muted" />
+                    </div>
+                  </div>
+                ))}
               </div>
-              <CardDescription className="text-gray-500">
-                Your most recently updated boards
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <Skeleton className="h-10 w-10 rounded bg-white/10" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-32 bg-white/10" />
-                        <Skeleton className="h-3 w-24 bg-white/10" />
+            ) : recentBoards.length > 0 ? (
+              <div className="space-y-4">
+                {recentBoards.map((board) => (
+                  <Link
+                    key={board.id}
+                    href={`/dashboard/boards/${board.id}`}
+                    className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-accent/50 transition-all duration-200 group"
+                  >
+                    <div className="h-12 w-12 rounded bg-secondary flex items-center justify-center flex-shrink-0">
+                      <LayoutDashboard className="h-6 w-6 text-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-base font-medium text-foreground truncate group-hover:underline decoration-1 underline-offset-4">
+                        {board.name}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="truncate">{board.organization.name}</span>
+                        <span>•</span>
+                        <span>{board._count.lists} lists</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : recentBoards.length > 0 ? (
-                <div className="space-y-2">
-                  {recentBoards.map((board) => (
-                    <Link
-                      key={board.id}
-                      href={`/dashboard/boards/${board.id}`}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group border border-transparent hover:border-white/10"
-                    >
-                      <div className="h-10 w-10 rounded bg-white flex items-center justify-center flex-shrink-0">
-                        <LayoutDashboard className="h-5 w-5 text-black" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
-                          {board.name}
-                        </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span className="truncate">{board.organization.name}</span>
-                          <span>•</span>
-                          <span>{board._count.lists} lists</span>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className="text-xs border-white/20 text-gray-400">
-                        {board._count.members} {board._count.members === 1 ? 'member' : 'members'}
-                      </Badge>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <LayoutDashboard className="h-12 w-12 mx-auto mb-3 text-gray-600" />
-                  <p className="text-sm">No boards yet</p>
-                  <Link
-                    href="/dashboard/boards"
-                    className="text-xs text-white hover:underline mt-2 inline-block"
-                  >
-                    Create your first board
+                    <Badge variant="secondary" className="text-xs">
+                      {board._count.members} {board._count.members === 1 ? 'member' : 'members'}
+                    </Badge>
                   </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Organizations */}
-          <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-semibold text-white">Organizations</CardTitle>
-                <Link 
-                  href="/dashboard/organizations"
-                  className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1"
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground border border-dashed border-border rounded-lg">
+                <LayoutDashboard className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-base font-medium">No boards yet</p>
+                <Link
+                  href="/dashboard/boards"
+                  className="text-sm text-primary hover:underline mt-2 inline-block"
                 >
-                  View all
-                  <ArrowRight className="h-3 w-3" />
+                  Create your first board
                 </Link>
               </div>
-              <CardDescription className="text-gray-500">
-                Teams and workspaces you belong to
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Sidebar Column - Organizations & Profile - Takes up 3 columns */}
+        <div className="col-span-3 space-y-8">
+          {/* Organizations */}
+          <Card className="bg-card border-border shadow-none">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl font-semibold text-foreground">Organizations</CardTitle>
+                <Link 
+                  href="/dashboard/organizations"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                >
+                  View all
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <CardDescription className="text-muted-foreground">
+                Teams and workspaces
               </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <Skeleton className="h-10 w-10 rounded bg-white/10" />
+                    <div key={i} className="flex items-center gap-4">
+                      <Skeleton className="h-10 w-10 rounded bg-muted" />
                       <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-32 bg-white/10" />
-                        <Skeleton className="h-3 w-24 bg-white/10" />
+                        <Skeleton className="h-4 w-32 bg-muted" />
+                        <Skeleton className="h-3 w-24 bg-muted" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : organizations.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {organizations.map((org) => (
                     <Link
                       key={org.id}
-                      href={`/dashboard/organizations/${org.id}`}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-all duration-200 group border border-transparent hover:border-white/10"
+                      href={`/dashboard/organizations/${org.slug}`}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-all duration-200 group"
                     >
-                      <div className="h-10 w-10 rounded bg-white flex items-center justify-center flex-shrink-0">
-                        <span className="text-black font-bold text-lg">
+                      <div className="h-10 w-10 rounded bg-secondary flex items-center justify-center flex-shrink-0 border border-border">
+                        <span className="text-foreground font-bold text-lg">
                           {org.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">
+                        <p className="text-sm font-medium text-foreground truncate">
                           {org.name}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span>{org._count.members} members</span>
                           <span>•</span>
                           <span>{org._count.boards} boards</span>
@@ -357,12 +344,12 @@ export default function DashboardPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Building2 className="h-12 w-12 mx-auto mb-3 text-gray-600" />
+                <div className="text-center py-8 text-muted-foreground border border-dashed border-border rounded-lg">
+                  <Building2 className="h-10 w-10 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">No organizations yet</p>
                   <Link
                     href="/dashboard/organizations"
-                    className="text-xs text-white hover:underline mt-2 inline-block"
+                    className="text-xs text-primary hover:underline mt-2 inline-block"
                   >
                     Create your first organization
                   </Link>
@@ -370,50 +357,41 @@ export default function DashboardPage() {
               )}
             </CardContent>
           </Card>
-        </div>
 
-        {/* User Profile Card */}
-        <Card className="bg-white/5 border-white/10 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-white">Profile</CardTitle>
-            <CardDescription className="text-gray-500">
-              Your account information
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-start gap-4">
-              <Avatar className="h-16 w-16 border-2 border-white/20">
-                <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
-                <AvatarFallback className="bg-white text-black text-xl font-bold">
-                  {session.user.name?.charAt(0).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-400">Name</p>
-                  <p className="text-base text-white">{session.user.name || "Not provided"}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-400">Email</p>
-                  <p className="text-base text-white">{session.user.email}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {session.user.emailVerified ? (
-                    <Badge variant="outline" className="border-green-500/30 text-green-400 bg-green-500/10">
-                      <CheckCircle2 className="h-3 w-3 mr-1" />
-                      Verified
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="border-white/20 text-gray-400">
-                      <Circle className="h-3 w-3 mr-1" />
-                      Not verified
-                    </Badge>
-                  )}
+          {/* User Profile Card */}
+          <Card className="bg-card border-border shadow-none">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-foreground">Profile</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 border border-border">
+                  <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
+                  <AvatarFallback className="bg-secondary text-foreground text-xl font-bold">
+                    {session.user.name?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-1">
+                  <p className="text-lg font-medium text-foreground">{session.user.name || "Not provided"}</p>
+                  <p className="text-sm text-muted-foreground">{session.user.email}</p>
+                  <div className="pt-2">
+                    {session.user.emailVerified ? (
+                      <Badge variant="outline" className="border-green-900/30 text-green-600 dark:text-green-400 bg-green-500/10">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="border-border text-muted-foreground">
+                        <Circle className="h-3 w-3 mr-1" />
+                        Not verified
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
