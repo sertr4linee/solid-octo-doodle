@@ -124,16 +124,29 @@ export interface ActionConfig {
 export interface TriggerContext {
   taskId?: string;
   task?: any;
+  oldTask?: any;
   userId?: string;
   user?: any;
   boardId: string;
   board?: any;
   listId?: string;
   previousListId?: string;
+  fromListId?: string;
+  toListId?: string;
   labelId?: string;
+  labelName?: string;
+  label?: any;
+  assignedUserId?: string;
+  unassignedUserId?: string;
   commentId?: string;
+  comment?: any;
+  mentionedUserIds?: string[];
   checklistId?: string;
+  checklist?: any;
+  checklistItemId?: string;
+  checklistItem?: any;
   webhookPayload?: any;
+  changes?: Record<string, any>;
   metadata?: Record<string, any>;
 }
 

@@ -129,7 +129,7 @@ export function CommentItem({
     >
       <div className="flex gap-3">
         {/* Avatar */}
-        <Avatar className="h-8 w-8 flex-shrink-0">
+        <Avatar className="h-8 w-8 shrink-0">
           <AvatarImage src={comment.user.image || undefined} alt={comment.user.name} />
           <AvatarFallback className="text-xs">
             {comment.user.name?.slice(0, 2).toUpperCase()}

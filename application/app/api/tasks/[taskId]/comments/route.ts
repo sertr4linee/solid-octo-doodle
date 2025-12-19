@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { triggerAutomation } from "@/lib/automation-engine";
 
 // GET /api/tasks/[taskId]/comments - List comments with threads
 // POST /api/tasks/[taskId]/comments - Create a new comment
@@ -257,6 +258,32 @@ export async function POST(
         metadata: JSON.stringify({ commentId: comment.id }),
       },
     });
+
+    // Déclencher les automatisations
+    try {
+      // Trigger comment_added
+      await triggerAutomation(task.list.boardId, "comment_added", {
+        taskId,
+        task,
+        commentId: comment.id,
+        comment,
+        userId: session.user.id,
+      });
+
+      // Trigger comment_mention si des utilisateurs sont mentionnés
+      if (mentionedUserIds?.length > 0) {
+        await triggerAutomation(task.list.boardId, "comment_mention", {
+          taskId,
+          task,
+          commentId: comment.id,
+          comment,
+          userId: session.user.id,
+          mentionedUserIds,
+        });
+      }
+    } catch (automationError) {
+      console.error("⚠️ Automation trigger error:", automationError);
+    }
 
     return NextResponse.json({ success: true, comment });
   } catch (error) {

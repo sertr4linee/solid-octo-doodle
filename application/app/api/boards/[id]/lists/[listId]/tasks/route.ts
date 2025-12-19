@@ -102,6 +102,19 @@ export async function POST(
     });
     console.log("✅ Task:created event emitted successfully");
 
+    // Déclencher les automatisations pour la création de carte
+    try {
+      await triggerAutomation(boardId, "card_created", {
+        taskId: task.id,
+        task,
+        userId: session.user.id,
+        listId,
+      });
+    } catch (automationError) {
+      console.error("⚠️ Automation trigger error:", automationError);
+      // Ne pas bloquer la création de tâche si l'automatisation échoue
+    }
+
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
     console.error("❌ Error creating task:", error);

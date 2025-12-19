@@ -251,7 +251,7 @@ export default function DashboardPage() {
                     href={`/dashboard/boards/${board.id}`}
                     className="flex items-center gap-4 p-4 rounded-lg border border-border hover:bg-accent/50 transition-all duration-200 group"
                   >
-                    <div className="h-12 w-12 rounded bg-secondary flex items-center justify-center flex-shrink-0">
+                    <div className="h-12 w-12 rounded bg-secondary flex items-center justify-center shrink-0">
                       <LayoutDashboard className="h-6 w-6 text-foreground" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -325,7 +325,7 @@ export default function DashboardPage() {
                       href={`/dashboard/organizations/${org.slug}`}
                       className="flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-all duration-200 group"
                     >
-                      <div className="h-10 w-10 rounded bg-secondary flex items-center justify-center flex-shrink-0 border border-border">
+                      <div className="h-10 w-10 rounded bg-secondary flex items-center justify-center shrink-0 border border-border">
                         <span className="text-foreground font-bold text-lg">
                           {org.name.charAt(0).toUpperCase()}
                         </span>

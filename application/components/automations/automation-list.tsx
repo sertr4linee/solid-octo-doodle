@@ -18,14 +18,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -361,29 +359,31 @@ export function AutomationList({
       )}
 
       {/* Delete Confirmation */}
-      <AlertDialog
+      <Dialog
         open={!!deleteConfirm}
-        onOpenChange={(o) => !o && setDeleteConfirm(null)}
+        onOpenChange={(o: boolean) => !o && setDeleteConfirm(null)}
       >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer l'automatisation ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Cette action est irréversible. L'historique d'exécution sera
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer l&apos;automatisation ?</DialogTitle>
+            <DialogDescription>
+              Cette action est irréversible. L&apos;historique d&apos;exécution sera
               également supprimé.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
               onClick={() => deleteConfirm && handleDeleteRule(deleteConfirm)}
-              className="bg-destructive text-destructive-foreground"
             >
               Supprimer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

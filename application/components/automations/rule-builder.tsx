@@ -311,7 +311,7 @@ export function RuleBuilder({
                           updateCondition(index, { operator: v as any })
                         }
                       >
-                        <SelectTrigger className="w-[160px]">
+                        <SelectTrigger className="w-40">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { canAccessBoard } from "@/lib/permissions";
 import { emitToBoard } from "@/lib/socket";
+import { triggerAutomation, checkChecklistCompletion } from "@/lib/automation-engine";
 
 // POST - Toggle checklist item checked status
 export async function POST(
@@ -80,6 +81,30 @@ export async function POST(
       item: updated,
       userId: session.user.id,
     });
+
+    // Déclencher les automatisations
+    try {
+      const boardId = item.checklist.task.list.board.id;
+      const taskId = item.checklist.taskId;
+
+      // Trigger checklist_item_checked si item coché
+      if (updated.checked) {
+        await triggerAutomation(boardId, "checklist_item_checked", {
+          taskId,
+          task: item.checklist.task,
+          checklistId: item.checklistId,
+          checklist: item.checklist,
+          checklistItemId: updated.id,
+          checklistItem: updated,
+          userId: session.user.id,
+        });
+
+        // Vérifier si la checklist entière est complète
+        await checkChecklistCompletion(item.checklistId);
+      }
+    } catch (automationError) {
+      console.error("⚠️ Automation trigger error:", automationError);
+    }
 
     return NextResponse.json(updated);
   } catch (error) {

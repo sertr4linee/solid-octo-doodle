@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { emitToBoard } from "@/lib/socket";
 import { canAccessBoard } from "@/lib/permissions";
+import { triggerAutomation } from "@/lib/automation-engine";
 
 // POST - Add a label to a task
 export async function POST(
@@ -126,6 +127,20 @@ export async function POST(
       label,
       userId: session.user.id,
     });
+
+    // Déclencher l'automatisation pour l'ajout de label
+    try {
+      await triggerAutomation(task.list.board.id, "label_added", {
+        taskId,
+        task,
+        label,
+        labelId: label.id,
+        labelName: label.name,
+        userId: session.user.id,
+      });
+    } catch (automationError) {
+      console.error("⚠️ Automation trigger error:", automationError);
+    }
 
     return NextResponse.json(taskLabel, { status: 201 });
   } catch (error) {

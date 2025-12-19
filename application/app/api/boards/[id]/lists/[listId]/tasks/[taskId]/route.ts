@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { emitToBoard } from "@/lib/socket";
 import { canAccessBoard } from "@/lib/permissions";
+import { triggerAutomation } from "@/lib/automation-engine";
 
 // GET - Get task details
 export async function GET(
@@ -100,6 +101,12 @@ export async function PATCH(
       );
     }
 
+    // Get old task data for automation triggers
+    const oldTask = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: { listId: true, assigneeId: true },
+    });
+
     // Update task
     const task = await prisma.task.update({
       where: { id: taskId },
@@ -143,6 +150,50 @@ export async function PATCH(
       task,
       userId: session.user.id,
     });
+
+    // Déclencher les automatisations
+    try {
+      // Trigger card_updated
+      await triggerAutomation(boardId, "card_updated", {
+        taskId: task.id,
+        task,
+        oldTask,
+        userId: session.user.id,
+        changes: body,
+      });
+
+      // Trigger card_moved if list changed
+      if (oldTask && body.listId && body.listId !== oldTask.listId) {
+        await triggerAutomation(boardId, "card_moved", {
+          taskId: task.id,
+          task,
+          userId: session.user.id,
+          fromListId: oldTask.listId,
+          toListId: body.listId,
+        });
+      }
+
+      // Trigger member_assigned if assignee added
+      if (oldTask && body.assigneeId && body.assigneeId !== oldTask.assigneeId) {
+        if (oldTask.assigneeId && !body.assigneeId) {
+          await triggerAutomation(boardId, "member_unassigned", {
+            taskId: task.id,
+            task,
+            userId: session.user.id,
+            unassignedUserId: oldTask.assigneeId,
+          });
+        } else if (body.assigneeId) {
+          await triggerAutomation(boardId, "member_assigned", {
+            taskId: task.id,
+            task,
+            userId: session.user.id,
+            assignedUserId: body.assigneeId,
+          });
+        }
+      }
+    } catch (automationError) {
+      console.error("⚠️ Automation trigger error:", automationError);
+    }
 
     return NextResponse.json(task);
   } catch (error) {

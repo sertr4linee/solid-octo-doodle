@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { emitToBoard } from "@/lib/socket";
 import { canAccessBoard } from "@/lib/permissions";
+import { triggerAutomation } from "@/lib/automation-engine";
 
 // DELETE - Remove a label from a task
 export async function DELETE(
@@ -98,6 +99,20 @@ export async function DELETE(
       labelId,
       userId: session.user.id,
     });
+
+    // Déclencher l'automatisation pour la suppression de label
+    try {
+      await triggerAutomation(task.list.board.id, "label_removed", {
+        taskId,
+        task,
+        labelId,
+        labelName: taskLabel.label.name,
+        label: taskLabel.label,
+        userId: session.user.id,
+      });
+    } catch (automationError) {
+      console.error("⚠️ Automation trigger error:", automationError);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
