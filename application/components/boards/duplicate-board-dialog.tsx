@@ -158,9 +158,9 @@ export function DuplicateBoardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] p-0 flex flex-col">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 border-b border-gray-100 dark:border-gray-800">
+        <div className="px-6 pt-6 pb-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-950 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <div className="p-2 rounded-xl bg-primary/10">
@@ -175,7 +175,7 @@ export function DuplicateBoardDialog({
           </DialogHeader>
         </div>
 
-        <div className="px-6 py-5 space-y-6">
+        <div className="px-6 py-5 space-y-6 overflow-y-auto flex-1">
           {/* New Name Input */}
           <div className="space-y-2">
             <Label htmlFor="board-name" className="text-sm font-medium">
@@ -267,7 +267,7 @@ export function DuplicateBoardDialog({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end gap-3 flex-shrink-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

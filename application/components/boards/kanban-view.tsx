@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MoreHorizontal, Plus, Archive, Loader2, Trash2, Users, MessageSquare } from "lucide-react";
+import { MoreHorizontal, Plus, Archive, Loader2, Trash2, Users, MessageSquare, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { TaskReactions } from "@/components/tasks/task-reactions";
 import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
@@ -42,6 +42,7 @@ import { AttachmentsSection } from "@/components/attachments";
 import { Paperclip } from "lucide-react";
 import { CommentList } from "@/components/comments";
 import { useSession } from "@/lib/auth-client";
+import { ListColorPicker } from "@/components/lists";
 
 // Simplified label type for display
 interface SimpleLabel {
@@ -193,22 +194,41 @@ export function KanbanView({ boardId, lists, onTaskMove, onRefresh }: KanbanView
             const taskCount = list.tasks.length;
 
             return (
-              <KanbanBoard
+              <div
                 key={column.id}
-                id={column.id}
-                className="bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-800/50"
+                className="shrink-0 rounded-2xl border-2 transition-colors"
+                style={{
+                  borderColor: list.color || "rgb(229 231 235 / 0.5)",
+                  borderTopWidth: list.color ? "4px" : "2px",
+                }}
               >
+                <KanbanBoard
+                  id={column.id}
+                  className="bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-xl rounded-2xl shadow-lg border-0 h-full"
+                >
                 <KanbanHeader className="border-b border-gray-200/50 dark:border-gray-800/50 px-1">
                   <KanbanColumnTitle count={taskCount}>
                     <div className="flex items-center gap-2">
                       {list.emoji && <span className="text-lg">{list.emoji}</span>}
+                      {list.color && (
+                        <div
+                          className="w-3 h-3 rounded-full ring-2 ring-white dark:ring-gray-900 shadow-sm"
+                          style={{ backgroundColor: list.color }}
+                        />
+                      )}
                       <span className="font-semibold text-gray-800 dark:text-gray-200">{column.name}</span>
                       <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full bg-gray-200/70 dark:bg-gray-700/70 text-gray-600 dark:text-gray-400">
                         {taskCount}
                       </span>
                     </div>
                   </KanbanColumnTitle>
-                  <ListMenu listId={list.id} listName={list.name} boardId={boardId} onRefresh={onRefresh} />
+                  <ListMenu
+                    listId={list.id}
+                    listName={list.name}
+                    listColor={list.color}
+                    boardId={boardId}
+                    onRefresh={onRefresh}
+                  />
                 </KanbanHeader>
 
                 <KanbanCards<KanbanTaskItem> id={column.id}>
@@ -239,6 +259,7 @@ export function KanbanView({ boardId, lists, onTaskMove, onRefresh }: KanbanView
                   </KanbanAddCard>
                 )}
               </KanbanBoard>
+              </div>
             );
           })}
 
@@ -315,15 +336,40 @@ export function KanbanView({ boardId, lists, onTaskMove, onRefresh }: KanbanView
 function ListMenu({
   listId,
   listName,
+  listColor,
   boardId,
   onRefresh,
 }: {
   listId: string;
   listName: string;
+  listColor?: string | null;
   boardId: string;
   onRefresh?: () => void;
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdatingColor, setIsUpdatingColor] = useState(false);
+
+  const handleColorChange = async (color: string | null) => {
+    setIsUpdatingColor(true);
+    try {
+      const response = await fetch(`/api/boards/${boardId}/lists/${listId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ color }),
+      });
+
+      if (response.ok) {
+        toast.success(color ? "List color updated" : "List color removed");
+        onRefresh?.();
+      } else {
+        toast.error("Failed to update list color");
+      }
+    } catch (error) {
+      toast.error("Failed to update list color");
+    } finally {
+      setIsUpdatingColor(false);
+    }
+  };
 
   const handleDeleteList = async () => {
     if (!confirm(`Are you sure you want to archive "${listName}"?`)) return;
@@ -348,17 +394,28 @@ function ListMenu({
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-200">
-          <MoreHorizontal className="h-4 w-4 text-gray-700" />
+        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <MoreHorizontal className="h-4 w-4 text-gray-700 dark:text-gray-300" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-white shadow-xl border-2">
+      <DropdownMenuContent align="end" className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-xl border-2 border-gray-200 dark:border-gray-700 z-50">
         <DropdownMenuItem className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2 text-blue-600" />
           Add card
         </DropdownMenuItem>
+        <div
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ListColorPicker currentColor={listColor} onColorChange={handleColorChange}>
+            <div className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-purple-50 dark:hover:bg-purple-950/30 focus:bg-purple-50 dark:focus:bg-purple-950/30 data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+              <Palette className="h-4 w-4 mr-2 text-purple-600" />
+              {isUpdatingColor ? "Updating..." : "Change color"}
+            </div>
+          </ListColorPicker>
+        </div>
         <DropdownMenuItem className="cursor-pointer">Copy list</DropdownMenuItem>
         <DropdownMenuItem className="cursor-pointer">Move list</DropdownMenuItem>
         <DropdownMenuSeparator />

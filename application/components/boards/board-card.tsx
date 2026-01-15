@@ -22,10 +22,12 @@ import {
   Trash2,
   Settings,
   UserPlus,
+  Copy,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { DuplicateBoardDialog } from "./duplicate-board-dialog";
 
 interface BoardWithDetails extends Board {
   organization: {
@@ -70,6 +72,7 @@ const visibilityConfig = {
 export function BoardCard({ board, onUpdate }: BoardCardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const VisibilityIcon =
     visibilityConfig[board.visibility as keyof typeof visibilityConfig]?.icon ||
     Lock;
@@ -145,8 +148,9 @@ export function BoardCard({ board, onUpdate }: BoardCardProps) {
   };
 
   return (
-    <Link href={`/dashboard/boards/${board.id}`} className="block group">
-      <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50">
+    <>
+      <Link href={`/dashboard/boards/${board.id}`} className="block group">
+        <Card className="overflow-hidden hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50">
         <div
           className="h-24 relative"
           style={{ backgroundColor: board.background || "#0079bf" }}
@@ -168,7 +172,7 @@ export function BoardCard({ board, onUpdate }: BoardCardProps) {
                 </p>
               )}
             </div>
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
                 <Button
                   variant="ghost"
@@ -179,7 +183,7 @@ export function BoardCard({ board, onUpdate }: BoardCardProps) {
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="max-h-96 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-700 z-50">
                 <DropdownMenuItem onClick={handleStar}>
                   <Star
                     className={`h-4 w-4 mr-2 ${
@@ -205,6 +209,16 @@ export function BoardCard({ board, onUpdate }: BoardCardProps) {
                 >
                   <UserPlus className="h-4 w-4 mr-2" />
                   Manage Members
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDuplicateDialogOpen(true);
+                  }}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicate Board
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleArchive}>
@@ -251,5 +265,17 @@ export function BoardCard({ board, onUpdate }: BoardCardProps) {
         </CardContent>
       </Card>
     </Link>
+
+    <DuplicateBoardDialog
+      open={duplicateDialogOpen}
+      onOpenChange={setDuplicateDialogOpen}
+      boardId={board.id}
+      boardName={board.name}
+      onSuccess={() => {
+        onUpdate?.();
+        router.refresh();
+      }}
+    />
+  </>
   );
 }

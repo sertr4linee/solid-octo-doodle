@@ -214,7 +214,7 @@ export async function POST(
                   await tx.checklist.create({
                     data: {
                       id: newChecklistId,
-                      title: checklist.title,
+                      name: checklist.name,
                       taskId: newTaskId,
                       position: checklist.position,
                     },
@@ -248,10 +248,11 @@ export async function POST(
               name: rule.name,
               description: rule.description,
               boardId: newBoardId,
-              trigger: rule.trigger,
+              triggerType: rule.triggerType,
+              triggerConfig: rule.triggerConfig,
               conditions: rule.conditions,
               actions: rule.actions,
-              isActive: false, // Disabled by default for safety
+              enabled: false, // Disabled by default for safety
               createdById: session.user.id,
             },
           });

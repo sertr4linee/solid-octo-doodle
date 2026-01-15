@@ -34,6 +34,7 @@ import {
   Tags,
   Palette,
   Image as ImageIcon,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,7 @@ import { CalendarView } from "@/components/boards/calendar-view";
 import { TableView } from "@/components/boards/table-view";
 import { GalleryView } from "@/components/boards/gallery-view";
 import { KanbanView } from "@/components/boards/kanban-view";
+import { DuplicateBoardDialog } from "@/components/boards/duplicate-board-dialog";
 
 interface Board {
   id: string;
@@ -137,6 +139,7 @@ export default function BoardDetailPage({
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [customizeTab, setCustomizeTab] = useState("background");
   const [currentView, setCurrentView] = useState<"kanban" | "calendar" | "table" | "timeline" | "gallery">("kanban");
+  const [isDuplicateOpen, setIsDuplicateOpen] = useState(false);
 
   // Obtenir le boardId immédiatement de manière synchrone
   const [resolvedBoardId, setResolvedBoardId] = useState<string>("");
@@ -608,7 +611,7 @@ export default function BoardDetailPage({
             Invite
           </Button>
 
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -618,52 +621,59 @@ export default function BoardDetailPage({
                 <MoreHorizontal className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white shadow-xl border-2 border-gray-200">
-              <DropdownMenuItem 
+            <DropdownMenuContent align="end" className="w-56 bg-white dark:bg-gray-900 shadow-xl border-2 border-gray-200 dark:border-gray-700 max-h-96 z-50">
+              <DropdownMenuItem
                 onClick={() => setShowActivity(!showActivity)}
-                className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 text-gray-900"
+                className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950/30 focus:bg-blue-50 dark:focus:bg-blue-950/30 text-gray-900 dark:text-gray-100"
               >
                 <Activity className="h-4 w-4 mr-2 text-blue-600" />
-                <span className="font-semibold text-gray-900">{showActivity ? "Hide" : "Show"} Activity</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{showActivity ? "Hide" : "Show"} Activity</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setIsLabelsOpen(true)}
-                className="cursor-pointer hover:bg-purple-50 focus:bg-purple-50 text-gray-900"
+                className="cursor-pointer hover:bg-purple-50 dark:hover:bg-purple-950/30 focus:bg-purple-50 dark:focus:bg-purple-950/30 text-gray-900 dark:text-gray-100"
               >
                 <Tags className="h-4 w-4 mr-2 text-purple-600" />
-                <span className="font-semibold text-gray-900">Manage Labels</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Manage Labels</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setIsCustomizeOpen(true)}
-                className="cursor-pointer hover:bg-pink-50 focus:bg-pink-50 text-gray-900"
+                className="cursor-pointer hover:bg-pink-50 dark:hover:bg-pink-950/30 focus:bg-pink-50 dark:focus:bg-pink-950/30 text-gray-900 dark:text-gray-100"
               >
                 <Palette className="h-4 w-4 mr-2 text-pink-600" />
-                <span className="font-semibold text-gray-900">Customize</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Customize</span>
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setIsSettingsOpen(true)}
-                className="cursor-pointer hover:bg-gray-50 focus:bg-gray-50 text-gray-900"
+                className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 focus:bg-gray-50 dark:focus:bg-gray-800 text-gray-900 dark:text-gray-100"
               >
-                <Settings className="h-4 w-4 mr-2 text-gray-600" />
-                <span className="font-semibold text-gray-900">Settings</span>
+                <Settings className="h-4 w-4 mr-2 text-gray-600 dark:text-gray-400" />
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => setIsDuplicateOpen(true)}
+                className="cursor-pointer hover:bg-green-50 dark:hover:bg-green-950/30 focus:bg-green-50 dark:focus:bg-green-950/30 text-gray-900 dark:text-gray-100"
+              >
+                <Copy className="h-4 w-4 mr-2 text-green-600" />
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Duplicate Board</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={handleArchiveBoard}
-                className="cursor-pointer hover:bg-orange-50 focus:bg-orange-50 text-gray-900"
+                className="cursor-pointer hover:bg-orange-50 dark:hover:bg-orange-950/30 focus:bg-orange-50 dark:focus:bg-orange-950/30 text-gray-900 dark:text-gray-100"
               >
                 <Archive className="h-4 w-4 mr-2 text-orange-600" />
-                <span className="font-semibold text-gray-900">Archive Board</span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Archive Board</span>
               </DropdownMenuItem>
               {board.userRole === "owner" && (
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleDeleteBoard}
-                    className="cursor-pointer hover:bg-red-50 focus:bg-red-50"
+                    className="cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/30 focus:bg-red-50 dark:focus:bg-red-950/30"
                   >
-                    <Trash2 className="h-4 w-4 mr-2 text-red-600" />
-                    <span className="font-semibold text-red-600">Delete Board</span>
+                    <Trash2 className="h-4 w-4 mr-2 text-red-600 dark:text-red-500" />
+                    <span className="font-semibold text-red-600 dark:text-red-500">Delete Board</span>
                   </DropdownMenuItem>
                 </>
               )}
@@ -890,6 +900,18 @@ export default function BoardDetailPage({
       </Dialog>
 
       {/* Socket.IO Debug Panel (dev only) */}
+
+      {/* Duplicate Board Dialog */}
+      <DuplicateBoardDialog
+        open={isDuplicateOpen}
+        onOpenChange={setIsDuplicateOpen}
+        boardId={board.id}
+        boardName={board.name}
+        onSuccess={() => {
+          loadBoard(board.id);
+          router.refresh();
+        }}
+      />
     </div>
   );
 }
