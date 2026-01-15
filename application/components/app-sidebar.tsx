@@ -89,6 +89,12 @@ const dashboardRoutes: Route[] = [
     ],
   },
   {
+    id: "activity",
+    title: "Activity",
+    icon: <Activity className="size-4" />,
+    link: "/dashboard/activity",
+  },
+  {
     id: "automations",
     title: "Automations",
     icon: <Zap className="size-4" />,

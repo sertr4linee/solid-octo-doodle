@@ -238,6 +238,10 @@ model Task {
   checklists  Checklist[]
   attachments Attachment[]
 
+  // Card links
+  linksFrom   CardLink[] @relation("CardLinkFrom")
+  linksTo     CardLink[] @relation("CardLinkTo")
+
   @@map("task")
 }
 
@@ -889,7 +893,24 @@ model AutomationWebhook {
   
   board           Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
   createdBy       User     @relation("WebhookCreator", fields: [createdById], references: [id])
-  
+
   @@map("automation_webhook")
+}
+
+// Card Links - Relationships between tasks
+model CardLink {
+  id          String   @id
+  fromTaskId  String
+  toTaskId    String
+  linkType    String   // related_to, follow_up_of, duplicate, blocks, blocked_by
+  createdById String
+  createdAt   DateTime @default(now())
+
+  fromTask    Task     @relation("CardLinkFrom", fields: [fromTaskId], references: [id], onDelete: Cascade)
+  toTask      Task     @relation("CardLinkTo", fields: [toTaskId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation("CardLinkCreator", fields: [createdById], references: [id])
+
+  @@unique([fromTaskId, toTaskId, linkType])
+  @@map("card_link")
 }
 
