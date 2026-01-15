@@ -7,7 +7,7 @@ import { AutomationEngine, TriggerType, TriggerContext } from "@/lib/automation-
 // POST /api/boards/[boardId]/automations/[ruleId]/test - Test run an automation rule
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; ruleId: string }> }
+  { params }: { params: Promise<{ id: string; ruleId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -15,7 +15,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, ruleId } = await params;
+    const { id: boardId, ruleId } = await params;
     const body = await request.json();
     const { taskId } = body;
 

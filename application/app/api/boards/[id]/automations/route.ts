@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 // POST /api/boards/[boardId]/automations - Create a new automation rule
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId } = await params;
+    const { id: boardId } = await params;
     const { searchParams } = new URL(request.url);
     const enabled = searchParams.get("enabled");
     const triggerType = searchParams.get("triggerType");
@@ -77,7 +77,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -85,7 +85,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId } = await params;
+    const { id: boardId } = await params;
     const body = await request.json();
 
     // Verify board access (only admin/owner can create automations)

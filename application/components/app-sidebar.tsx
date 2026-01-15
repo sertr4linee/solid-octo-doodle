@@ -23,6 +23,7 @@ import {
   Store,
   Link2,
   Puzzle,
+  Zap,
 } from "lucide-react";
 import { Logo } from "@/components/layout/logo";
 import type { Route } from "./layout/nav-main";
@@ -86,6 +87,12 @@ const dashboardRoutes: Route[] = [
         icon: <Archive className="size-4" />,
       },
     ],
+  },
+  {
+    id: "automations",
+    title: "Automations",
+    icon: <Zap className="size-4" />,
+    link: "/dashboard/automations",
   },
   {
     id: "marketplace",

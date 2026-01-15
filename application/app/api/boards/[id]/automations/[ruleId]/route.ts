@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 // DELETE /api/boards/[boardId]/automations/[ruleId] - Delete automation rule
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; ruleId: string }> }
+  { params }: { params: Promise<{ id: string; ruleId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, ruleId } = await params;
+    const { id: boardId, ruleId } = await params;
 
     // Verify board access
     const board = await prisma.board.findFirst({
@@ -74,7 +74,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; ruleId: string }> }
+  { params }: { params: Promise<{ id: string; ruleId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -82,7 +82,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, ruleId } = await params;
+    const { id: boardId, ruleId } = await params;
     const body = await request.json();
 
     // Verify board access (admin/owner only)
@@ -174,7 +174,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; ruleId: string }> }
+  { params }: { params: Promise<{ id: string; ruleId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -182,7 +182,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, ruleId } = await params;
+    const { id: boardId, ruleId } = await params;
 
     // Verify board access (admin/owner only)
     const board = await prisma.board.findFirst({

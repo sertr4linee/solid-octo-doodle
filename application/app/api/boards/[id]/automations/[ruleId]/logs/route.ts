@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 // GET /api/boards/[boardId]/automations/[ruleId]/logs - Get automation execution logs
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string; ruleId: string }> }
+  { params }: { params: Promise<{ id: string; ruleId: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId, ruleId } = await params;
+    const { id: boardId, ruleId } = await params;
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "50");
     const status = searchParams.get("status");

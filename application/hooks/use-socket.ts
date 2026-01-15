@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import type { SocketEvent, SocketData } from "@/lib/socket";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 interface UseSocketOptions {
   organizationId?: string;
   boardId?: string;
@@ -17,33 +19,25 @@ export function useSocket(options: UseSocketOptions = {}) {
   const socketRef = useRef<Socket | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
+  const currentRoomsRef = useRef<{ orgId?: string; boardId?: string }>({});
 
   useEffect(() => {
-    if (!enabled) {
-      console.log('🔌 Socket.IO disabled');
-      return;
-    }
+    if (!enabled) return;
 
-    // Récupérer le token d'authentification
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("better-auth.session_token="))
       ?.split("=")[1];
 
     if (!token) {
-      console.warn("⚠️ No authentication token found in cookies");
       setError(new Error("No authentication token found"));
-      // Continuer quand même sans token pour tester
     }
 
-    // Créer la connexion Socket.IO
-    const socketUrl = typeof window !== "undefined" 
-      ? `${window.location.protocol}//${window.location.host}`
-      : "http://localhost:3000";
-    
-    console.log(`🔌 Connecting to Socket.IO server at: ${socketUrl}`);
-    console.log(`🔑 Auth token: ${token ? 'Found ✅' : 'Missing ❌'}`);
-    
+    const socketUrl =
+      typeof window !== "undefined"
+        ? `${window.location.protocol}//${window.location.host}`
+        : "http://localhost:3000";
+
     const socket = io(socketUrl, {
       auth: token ? { token } : {},
       transports: ["websocket", "polling"],
@@ -55,36 +49,32 @@ export function useSocket(options: UseSocketOptions = {}) {
 
     socketRef.current = socket;
 
-    // Event handlers
     socket.on("connect", () => {
-      console.log("✅ Socket.IO connected");
+      isDev && console.log("✅ Socket connected");
       setIsConnected(true);
       setError(null);
       reconnectAttemptsRef.current = 0;
 
-      // Rejoindre les rooms appropriées
       if (organizationId) {
         socket.emit("join:organization", organizationId);
-        console.log(`📍 Joined organization room: ${organizationId}`);
+        currentRoomsRef.current.orgId = organizationId;
       }
       if (boardId) {
         socket.emit("join:board", boardId);
-        console.log(`� Joined board room: ${boardId}`);
+        currentRoomsRef.current.boardId = boardId;
       }
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("❌ Socket.IO disconnected:", reason);
+      isDev && console.log("❌ Socket disconnected:", reason);
       setIsConnected(false);
-      
+
       if (reason === "io server disconnect") {
-        // Le serveur a déconnecté, il faut reconnecter manuellement
         socket.connect();
       }
     });
 
     socket.on("connect_error", (err) => {
-      console.error("❌ Socket.IO connection error:", err);
       setError(err);
       reconnectAttemptsRef.current++;
 
@@ -94,37 +84,43 @@ export function useSocket(options: UseSocketOptions = {}) {
       }
     });
 
-    socket.on("pong", (data: { timestamp: number }) => {
-      const latency = Date.now() - data.timestamp;
-      console.log(`🏓 Pong received (latency: ${latency}ms)`);
-    });
-
-    // Cleanup
     return () => {
-      if (organizationId) {
-        socket.emit("leave:organization", organizationId);
+      if (currentRoomsRef.current.orgId) {
+        socket.emit("leave:organization", currentRoomsRef.current.orgId);
       }
-      if (boardId) {
-        socket.emit("leave:board", boardId);
+      if (currentRoomsRef.current.boardId) {
+        socket.emit("leave:board", currentRoomsRef.current.boardId);
       }
       socket.disconnect();
     };
-  }, [enabled, organizationId, boardId]);
+  }, [enabled]);
 
-  // Rejoindre les rooms quand les IDs changent (pour les connexions déjà établies)
+  // Handle room changes when IDs change
   useEffect(() => {
     if (!socketRef.current || !isConnected) return;
 
-    if (boardId) {
-      console.log(`🔄 Attempting to join board room: ${boardId}`);
-      socketRef.current.emit("join:board", boardId);
-      console.log(`📋 Rejoined board room: ${boardId}`);
+    const socket = socketRef.current;
+
+    // Handle board room changes
+    if (boardId !== currentRoomsRef.current.boardId) {
+      if (currentRoomsRef.current.boardId) {
+        socket.emit("leave:board", currentRoomsRef.current.boardId);
+      }
+      if (boardId) {
+        socket.emit("join:board", boardId);
+      }
+      currentRoomsRef.current.boardId = boardId;
     }
 
-    if (organizationId) {
-      console.log(`🔄 Attempting to join organization room: ${organizationId}`);
-      socketRef.current.emit("join:organization", organizationId);
-      console.log(`📍 Rejoined organization room: ${organizationId}`);
+    // Handle org room changes
+    if (organizationId !== currentRoomsRef.current.orgId) {
+      if (currentRoomsRef.current.orgId) {
+        socket.emit("leave:organization", currentRoomsRef.current.orgId);
+      }
+      if (organizationId) {
+        socket.emit("join:organization", organizationId);
+      }
+      currentRoomsRef.current.orgId = organizationId;
     }
   }, [boardId, organizationId, isConnected]);
 

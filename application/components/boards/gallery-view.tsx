@@ -1,10 +1,10 @@
 "use client";
 
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar } from "lucide-react";
+import { Calendar, MessageSquare, Paperclip, CheckSquare, Inbox } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 type Task = {
   id: string;
@@ -16,6 +16,7 @@ type Task = {
   coverImage?: string | null;
   list: { name: string; color?: string; emoji?: string };
   assignee?: { name: string; image?: string | null } | null;
+  _count?: { comments?: number; attachments?: number; checklists?: number };
 };
 
 interface GalleryViewProps {
@@ -25,92 +26,152 @@ interface GalleryViewProps {
 
 export function GalleryView({ tasks, onTaskClick }: GalleryViewProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-      {tasks.map((task) => (
-        <Card
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+      {tasks.map((task, index) => (
+        <div
           key={task.id}
-          className="cursor-pointer hover:shadow-lg transition-all overflow-hidden group"
+          className={cn(
+            "group relative bg-white dark:bg-gray-900 rounded-2xl overflow-hidden cursor-pointer",
+            "border border-gray-200/50 dark:border-gray-800/50",
+            "shadow-sm hover:shadow-xl transition-all duration-300",
+            "hover:-translate-y-1 hover:border-primary/30"
+          )}
           onClick={() => onTaskClick?.(task.id)}
+          style={{
+            animationDelay: `${index * 50}ms`,
+          }}
         >
           {/* Cover Image/Color */}
           <div
-            className="h-32 relative"
+            className="h-40 relative overflow-hidden"
             style={{
               background: task.coverImage
                 ? `url(${task.coverImage}) center/cover`
-                : task.coverColor || task.list.color || '#e5e7eb',
+                : task.coverColor ||
+                  task.list.color ||
+                  "linear-gradient(135deg, hsl(var(--muted)) 0%, hsl(var(--muted)/0.5) 100%)",
             }}
           >
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+            {/* Emoji display */}
             {task.emoji && !task.coverImage && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-6xl opacity-20">{task.emoji}</span>
+                <span className="text-7xl opacity-30 group-hover:opacity-50 group-hover:scale-110 transition-all duration-300">
+                  {task.emoji}
+                </span>
               </div>
             )}
-            {task.emoji && task.coverImage && (
-              <div className="absolute top-2 left-2 bg-white/90 dark:bg-black/90 p-1 rounded">
-                <span className="text-2xl">{task.emoji}</span>
-              </div>
-            )}
-          </div>
-          
-          <CardHeader className="pb-3">
-            <div className="space-y-2">
-              <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
-                {task.title}
-              </h3>
-              {task.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {task.description}
-                </p>
+
+            {/* Top badges */}
+            <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
+              {task.emoji && task.coverImage && (
+                <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-2 py-1 rounded-lg shadow-lg">
+                  <span className="text-xl">{task.emoji}</span>
+                </div>
               )}
-            </div>
-          </CardHeader>
-          
-          <CardContent className="pt-0">
-            <div className="space-y-3">
-              {/* Status Badge */}
-              <Badge variant="secondary" className="text-xs">
+              <Badge
+                variant="secondary"
+                className={cn(
+                  "ml-auto text-[10px] font-semibold uppercase tracking-wide",
+                  "bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-lg",
+                  "border-0"
+                )}
+                style={{
+                  color: task.list.color || "inherit",
+                }}
+              >
                 {task.list.emoji && <span className="mr-1">{task.list.emoji}</span>}
                 {task.list.name}
               </Badge>
-              
-              {/* Footer Info */}
-              <div className="flex items-center justify-between text-sm">
-                {/* Assignee */}
-                <div className="flex items-center gap-1">
-                  {task.assignee ? (
-                    <>
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage src={task.assignee.image || undefined} />
-                        <AvatarFallback className="text-[10px]">
-                          {task.assignee.name.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs text-muted-foreground truncate max-w-20">
-                        {task.assignee.name}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">Unassigned</span>
-                  )}
-                </div>
-                
-                {/* Due Date */}
-                {task.dueDate && (
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Calendar className="h-3 w-3" />
-                    <span>{format(task.dueDate, 'MMM dd')}</span>
+            </div>
+
+            {/* Assignee avatar (bottom right of cover) */}
+            {task.assignee && (
+              <div className="absolute bottom-3 right-3">
+                <Avatar className="h-10 w-10 border-3 border-white dark:border-gray-900 shadow-lg ring-2 ring-white/50">
+                  <AvatarImage src={task.assignee.image || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-sm font-bold">
+                    {task.assignee.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="p-4">
+            <h3 className="font-semibold text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+              {task.title}
+            </h3>
+
+            {task.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-2">
+                {task.description}
+              </p>
+            )}
+
+            {/* Meta info */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+              {/* Stats */}
+              <div className="flex items-center gap-3 text-muted-foreground">
+                {task._count?.comments && task._count.comments > 0 && (
+                  <div className="flex items-center gap-1 text-xs">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <span>{task._count.comments}</span>
+                  </div>
+                )}
+                {task._count?.attachments && task._count.attachments > 0 && (
+                  <div className="flex items-center gap-1 text-xs">
+                    <Paperclip className="h-3.5 w-3.5" />
+                    <span>{task._count.attachments}</span>
+                  </div>
+                )}
+                {task._count?.checklists && task._count.checklists > 0 && (
+                  <div className="flex items-center gap-1 text-xs">
+                    <CheckSquare className="h-3.5 w-3.5" />
+                    <span>{task._count.checklists}</span>
                   </div>
                 )}
               </div>
+
+              {/* Due Date */}
+              {task.dueDate && (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span
+                    className={cn(
+                      "font-medium",
+                      new Date(task.dueDate) < new Date()
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {format(task.dueDate, "MMM dd")}
+                  </span>
+                </div>
+              )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Hover accent line */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-1 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"
+            style={{
+              backgroundColor: task.coverColor || task.list.color || "hsl(var(--primary))",
+            }}
+          />
+        </div>
       ))}
-      
+
       {tasks.length === 0 && (
-        <div className="col-span-full text-center py-12 text-muted-foreground">
-          No tasks to display
+        <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground">
+          <div className="p-5 rounded-full bg-muted/30 mb-4">
+            <Inbox className="h-10 w-10" />
+          </div>
+          <p className="text-xl font-medium">No tasks to display</p>
+          <p className="text-sm mt-1">Create your first task to see it here</p>
         </div>
       )}
     </div>

@@ -8,7 +8,7 @@ import crypto from "crypto";
 // POST /api/boards/[boardId]/automations/webhooks - Create a new webhook endpoint
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -16,7 +16,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId } = await params;
+    const { id: boardId } = await params;
 
     // Verify board access
     const board = await prisma.board.findFirst({
@@ -65,7 +65,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ boardId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -73,7 +73,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { boardId } = await params;
+    const { id: boardId } = await params;
     const body = await request.json();
 
     // Verify board access (admin/owner only)
