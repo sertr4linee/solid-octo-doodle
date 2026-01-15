@@ -39,7 +39,8 @@ import { TaskTitleWithEmoji } from "@/components/tasks/task-title-with-emoji";
 import { ChecklistList } from "@/components/checklists/checklist-list";
 import { AssignUserDialog } from "@/components/tasks/assign-user-dialog";
 import { AttachmentsSection } from "@/components/attachments";
-import { Paperclip } from "lucide-react";
+import { Paperclip, Link2 } from "lucide-react";
+import { RelatedCards } from "@/components/tasks/related-cards";
 import { CommentList } from "@/components/comments";
 import { useSession } from "@/lib/auth-client";
 import { ListColorPicker } from "@/components/lists";
@@ -71,6 +72,8 @@ interface Task {
   taskLabels?: TaskLabelWithLabel[];
   _count: {
     comments: number;
+    linksFrom?: number;
+    linksTo?: number;
   };
 }
 
@@ -648,6 +651,12 @@ function TaskCardItem({
                   {task._count.comments}
                 </Badge>
               )}
+              {((task._count.linksFrom || 0) + (task._count.linksTo || 0)) > 0 && (
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 gap-1">
+                  <Link2 className="h-3 w-3" />
+                  {(task._count.linksFrom || 0) + (task._count.linksTo || 0)}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -774,6 +783,17 @@ function TaskCardItem({
                 canUpload={true}
                 canDelete={true}
               />
+            </div>
+
+            {/* Related Cards */}
+            <div className="space-y-3 pt-2">
+              <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                <Link2 className="h-4 w-4" />
+                Related Cards
+              </Label>
+              <div className="bg-gray-50 dark:bg-gray-900/30 rounded-xl p-4">
+                <RelatedCards taskId={task.id} boardId={boardId} />
+              </div>
             </div>
 
             {/* Actions */}

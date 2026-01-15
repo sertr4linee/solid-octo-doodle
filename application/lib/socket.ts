@@ -44,7 +44,9 @@ export type SocketEvent =
   | "checklist:item:updated"
   | "checklist:item:deleted"
   | "checklist:item:checked"
-  | "notification:new";
+  | "notification:new"
+  | "task:link:created"
+  | "task:link:deleted";
 
 export type SocketData<T = any> = {
   type: SocketEvent;
