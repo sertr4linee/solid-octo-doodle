@@ -103,12 +103,8 @@ export function ListColorPicker({
         align="start"
         side="right"
         sideOffset={8}
-        onPointerDownOutside={(e) => {
-          e.preventDefault();
-        }}
-        onInteractOutside={(e) => {
-          e.preventDefault();
-        }}
+        onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <div className="space-y-4" onMouseDown={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between">

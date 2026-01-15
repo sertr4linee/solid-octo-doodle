@@ -348,6 +348,7 @@ function ListMenu({
 }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingColor, setIsUpdatingColor] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const handleColorChange = async (color: string | null) => {
     setIsUpdatingColor(true);
@@ -394,7 +395,7 @@ function ListMenu({
   };
 
   return (
-    <DropdownMenu modal={false}>
+    <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen} modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-gray-200 dark:hover:bg-gray-700">
           <MoreHorizontal className="h-4 w-4 text-gray-700 dark:text-gray-300" />
@@ -406,10 +407,22 @@ function ListMenu({
           Add card
         </DropdownMenuItem>
         <div
-          onMouseDown={(e) => e.stopPropagation()}
-          onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
         >
-          <ListColorPicker currentColor={listColor} onColorChange={handleColorChange}>
+          <ListColorPicker
+            currentColor={listColor}
+            onColorChange={(color) => {
+              handleColorChange(color);
+              setDropdownOpen(false);
+            }}
+          >
             <div className="relative flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-purple-50 dark:hover:bg-purple-950/30 focus:bg-purple-50 dark:focus:bg-purple-950/30 data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
               <Palette className="h-4 w-4 mr-2 text-purple-600" />
               {isUpdatingColor ? "Updating..." : "Change color"}
